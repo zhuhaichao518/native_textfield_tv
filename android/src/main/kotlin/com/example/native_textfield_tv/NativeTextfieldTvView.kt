@@ -17,7 +17,7 @@ class NativeTextfieldTvView(
     private val viewId: Int,
     private val creationParams: Map<String?, Any?>?,
     private val messenger: BinaryMessenger
-) : PlatformView, MethodChannel.MethodCallHandler {
+) : PlatformView {
 
     private val editText: EditText
     private val methodChannel: MethodChannel
@@ -40,9 +40,8 @@ class NativeTextfieldTvView(
             }
         }
 
-        // 创建MethodChannel用于与Flutter通信
-        methodChannel = MethodChannel(messenger, "native_textfield_tv_$viewId")
-        methodChannel.setMethodCallHandler(this)
+        // 使用统一的MethodChannel
+        methodChannel = MethodChannel(messenger, "native_textfield_tv")
 
         // 添加文本变化监听器
         editText.addTextChangedListener(object : TextWatcher {
@@ -52,13 +51,21 @@ class NativeTextfieldTvView(
             
             override fun afterTextChanged(s: Editable?) {
                 // 通知Flutter文本已变化
-                methodChannel.invokeMethod("onTextChanged", s.toString())
+                val instanceId = creationParams?.get("instanceId") as? Int
+                methodChannel.invokeMethod("onTextChanged", mapOf(
+                    "instanceId" to instanceId,
+                    "text" to s.toString()
+                ))
             }
         })
 
         // 设置焦点变化监听器
         editText.setOnFocusChangeListener { _, hasFocus ->
-            methodChannel.invokeMethod("onFocusChanged", hasFocus)
+            val instanceId = creationParams?.get("instanceId") as? Int
+            methodChannel.invokeMethod("onFocusChanged", mapOf(
+                "instanceId" to instanceId,
+                "hasFocus" to hasFocus
+            ))
         }
     }
 
@@ -67,40 +74,31 @@ class NativeTextfieldTvView(
     }
 
     override fun dispose() {
-        methodChannel.setMethodCallHandler(null)
+        // 清理资源
     }
 
-    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        when (call.method) {
-            "setText" -> {
-                val text = call.argument<String>("text")
-                editText.setText(text ?: "")
-                result.success(null)
-            }
-            "getText" -> {
-                result.success(editText.text.toString())
-            }
-            "requestFocus" -> {
-                editText.requestFocus()
-                result.success(null)
-            }
-            "clearFocus" -> {
-                editText.clearFocus()
-                result.success(null)
-            }
-            "setEnabled" -> {
-                val enabled = call.argument<Boolean>("enabled") ?: true
-                editText.isEnabled = enabled
-                result.success(null)
-            }
-            "setHint" -> {
-                val hint = call.argument<String>("hint")
-                editText.hint = hint
-                result.success(null)
-            }
-            else -> {
-                result.notImplemented()
-            }
-        }
+    // 添加必要的方法来支持 Flutter 端的调用
+    fun setText(text: String) {
+        editText.setText(text)
+    }
+
+    fun getText(): String {
+        return editText.text.toString()
+    }
+
+    fun requestFocus() {
+        editText.requestFocus()
+    }
+
+    fun clearFocus() {
+        editText.clearFocus()
+    }
+
+    fun setEnabled(enabled: Boolean) {
+        editText.isEnabled = enabled
+    }
+
+    fun setHint(hint: String?) {
+        editText.hint = hint
     }
 } 

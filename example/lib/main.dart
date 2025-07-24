@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:native_textfield_tv/native_textfield_tv.dart';
-import 'package:native_textfield_tv_example/dpad_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +20,10 @@ class _MyAppState extends State<MyApp> {
 
   final FocusNode _focusNode0 = FocusNode();
   final FocusNode _focusNode1 = FocusNode();
+  
+  // 创建控制器
+  final NativeTextFieldController _controller = NativeTextFieldController();
+  final NativeTextFieldController _controller1 = NativeTextFieldController();
 
   @override
   void initState() {
@@ -84,22 +87,16 @@ class _MyAppState extends State<MyApp> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /*DpadTextField(focusNode: _focusNode0, child:                       NativeTextField(
-                        hint: '请输入文本...',
-                        initialText: '初始文本',
-                        focusNode: _focusNode1,
-                        onChanged: (text) {
-                          setState(() {
-                            _textContent = text;
-                          });
-                        },
-                        onFocusChanged: (hasFocus) {
-                          // 焦点变化处理
-                        },
-                        width: double.infinity,
-                        height: 50,
-                      ),),*/
-                      DpadNativeTextField(focusNode: _focusNode0, controller: NativeTextFieldController(),),
+                        ElevatedButton.icon(
+                            onPressed: () async {
+                              final text = await _controller.getText();
+                              setState(() {
+                                _textContent = text;
+                              });
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('获取文本'),
+                          ),
                       Text(
                         'Native TextField 演示',
                         style: Theme.of(context).textTheme.titleLarge,
@@ -107,21 +104,14 @@ class _MyAppState extends State<MyApp> {
                       const SizedBox(height: 16),
                       const Text('输入框:'),
                       const SizedBox(height: 8),
-                      /*NativeTextField(
-                        hint: '请输入文本...',
-                        initialText: '初始文本',
-                        focusNode: _focusNode,
-                        onChanged: (text) {
-                          setState(() {
-                            _textContent = text;
-                          });
-                        },
-                        onFocusChanged: (hasFocus) {
-                          // 焦点变化处理
-                        },
-                        width: double.infinity,
-                        height: 50,
-                      ),*/
+                      DpadNativeTextField(
+                        focusNode: _focusNode1, 
+                        controller: _controller1,
+                      ),
+                      DpadNativeTextField(
+                        focusNode: _focusNode0, 
+                        controller: _controller,
+                      ),
                       const SizedBox(height: 16),
                       Text('当前文本内容: $_textContent'),
                       const SizedBox(height: 16),
@@ -129,7 +119,7 @@ class _MyAppState extends State<MyApp> {
                         children: [
                           ElevatedButton.icon(
                             onPressed: () {
-                              _focusNode.requestFocus();
+                              _focusNode0.requestFocus();
                             },
                             icon: const Icon(Icons.keyboard),
                             label: const Text('请求焦点'),
@@ -137,10 +127,29 @@ class _MyAppState extends State<MyApp> {
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
                             onPressed: () {
-                              _focusNode.unfocus();
+                              _focusNode0.unfocus();
                             },
                             icon: const Icon(Icons.keyboard_hide),
                             label: const Text('清除焦点'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final text = await _controller.getText();
+                              setState(() {
+                                _textContent = text;
+                              });
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('获取文本'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _controller.setText('设置的新文本');
+                            },
+                            icon: const Icon(Icons.edit),
+                            label: const Text('设置文本'),
                           ),
                         ],
                       ),
@@ -158,6 +167,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _focusNode.dispose();
+    _focusNode0.dispose();
+    _focusNode1.dispose();
+    _controller.dispose();
     super.dispose();
   }
 }

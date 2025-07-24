@@ -4,25 +4,17 @@ import 'package:native_textfield_tv/native_textfield_tv.dart';
 
 void main() {
   const MethodChannel channel = MethodChannel('native_textfield_tv');
-  const MethodChannel viewChannel = MethodChannel('native_textfield_tv_0');
   final log = <MethodCall>[];
 
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    channel.setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
       log.add(methodCall);
       switch (methodCall.method) {
         case 'getPlatformVersion':
           return '42';
-        default:
-          return null;
-      }
-    });
-
-    viewChannel.setMockMethodCallHandler((MethodCall methodCall) async {
-      log.add(methodCall);
-      switch (methodCall.method) {
         case 'getText':
           return 'test text';
         case 'setText':
@@ -59,12 +51,13 @@ void main() {
   });
 
   test('NativeTextFieldController methods', () async {
-    final controller = NativeTextFieldController(0, viewChannel);
+    final controller = NativeTextFieldController();
 
     await controller.setText('new text');
     expect(log, hasLength(1));
     expect(log.first.method, 'setText');
-    expect(log.first.arguments, {'text': 'new text'});
+    expect(log.first.arguments['text'], 'new text');
+    expect(log.first.arguments['instanceId'], isNotNull);
 
     log.clear();
 
@@ -72,31 +65,36 @@ void main() {
     expect(text, 'test text');
     expect(log, hasLength(1));
     expect(log.first.method, 'getText');
+    expect(log.first.arguments['instanceId'], isNotNull);
 
     log.clear();
 
     await controller.requestFocus();
     expect(log, hasLength(1));
     expect(log.first.method, 'requestFocus');
+    expect(log.first.arguments['instanceId'], isNotNull);
 
     log.clear();
 
     await controller.clearFocus();
     expect(log, hasLength(1));
     expect(log.first.method, 'clearFocus');
+    expect(log.first.arguments['instanceId'], isNotNull);
 
     log.clear();
 
     await controller.setEnabled(false);
     expect(log, hasLength(1));
     expect(log.first.method, 'setEnabled');
-    expect(log.first.arguments, {'enabled': false});
+    expect(log.first.arguments['enabled'], false);
+    expect(log.first.arguments['instanceId'], isNotNull);
 
     log.clear();
 
     await controller.setHint('new hint');
     expect(log, hasLength(1));
     expect(log.first.method, 'setHint');
-    expect(log.first.arguments, {'hint': 'new hint'});
+    expect(log.first.arguments['hint'], 'new hint');
+    expect(log.first.arguments['instanceId'], isNotNull);
   });
 }
