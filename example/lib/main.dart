@@ -99,7 +99,7 @@ class _MyAppState extends State<MyApp> {
                         width: double.infinity,
                         height: 50,
                       ),),*/
-                      //DpadNativeTextField(focusNode: _focusNode0, controller: NativeTextFieldController(),),
+                      DpadNativeTextField(focusNode: _focusNode0, controller: NativeTextFieldController(),),
                       Text(
                         'Native TextField 演示',
                         style: Theme.of(context).textTheme.titleLarge,
@@ -107,7 +107,7 @@ class _MyAppState extends State<MyApp> {
                       const SizedBox(height: 16),
                       const Text('输入框:'),
                       const SizedBox(height: 8),
-                      NativeTextField(
+                      /*NativeTextField(
                         hint: '请输入文本...',
                         initialText: '初始文本',
                         focusNode: _focusNode,
@@ -121,7 +121,7 @@ class _MyAppState extends State<MyApp> {
                         },
                         width: double.infinity,
                         height: 50,
-                      ),
+                      ),*/
                       const SizedBox(height: 16),
                       Text('当前文本内容: $_textContent'),
                       const SizedBox(height: 16),

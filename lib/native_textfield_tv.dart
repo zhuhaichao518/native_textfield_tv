@@ -113,16 +113,24 @@ class _NativeTextFieldState extends State<NativeTextField> {
       'initialText': widget.initialText,
     };
 
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: AndroidView(
-        viewType: 'native_textfield_tv',
-        onPlatformViewCreated: _onPlatformViewCreated,
-        creationParams: creationParams,
-        creationParamsCodec: const StandardMessageCodec(),
-      ),
+    Widget child = AndroidView(
+      viewType: 'native_textfield_tv',
+      onPlatformViewCreated: _onPlatformViewCreated,
+      creationParams: creationParams,
+      creationParamsCodec: const StandardMessageCodec(),
     );
+
+    // 如果指定了尺寸，使用 SizedBox 包装
+    if (widget.width != null || widget.height != null) {
+      return SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: child,
+      );
+    }
+
+    // 否则直接返回 AndroidView，让它根据父级约束自适应
+    return child;
   }
 
   void _onPlatformViewCreated(int id) {
@@ -169,12 +177,13 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
     if (mounted) {
       setState(() {
         if (widget.focusNode.hasFocus) {
-          _wapperhasFocus = widget.focusNode.hasFocus;
+          widget.controller.requestFocus();
+          //_wapperhasFocus = widget.focusNode.hasFocus;
         } else {
-          _wapperhasFocus = widget.focusNode.hasFocus;
+          //_wapperhasFocus = widget.focusNode.hasFocus;
         }
         if (!_textFieldhasFocus && widget.focusNode.hasFocus) {
-          widget.focusNode.requestFocus();
+          //widget.focusNode.requestFocus();
         }
       });
     }
@@ -217,7 +226,11 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
                 borderRadius: BorderRadius.circular(4),
               )
             : null,
-        child: NativeTextField(controller: widget.controller,),
+        child: NativeTextField(
+          controller: widget.controller,
+          width: double.infinity,
+          height: 50,
+        ),
       ),
     );
   }
