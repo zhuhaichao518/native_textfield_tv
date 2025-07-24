@@ -165,7 +165,6 @@ class _NativeTextFieldState extends State<NativeTextField> {
         _isControllerCreated = true;
       }
       
-      // 更新回调
       _controller.onChanged = widget.onChanged;
       _controller.onFocusChanged = widget.onFocusChanged;
     }
@@ -186,7 +185,6 @@ class _NativeTextFieldState extends State<NativeTextField> {
       creationParamsCodec: const StandardMessageCodec(),
     );
 
-    // 如果指定了尺寸，使用 SizedBox 包装
     if (widget.width != null || widget.height != null) {
       return SizedBox(
         width: widget.width,
@@ -235,20 +233,15 @@ class DpadNativeTextField extends StatefulWidget {
 }
 
 class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
-  bool _wrapperHasFocus = false;
-  //bool _textFieldHasFocus = false;
-
   @override
   void initState() {
     super.initState();
-    //_wrapperHasFocus = widget.focusNode.hasFocus;
     widget.focusNode.addListener(_handleFocusChange);
   }
 
   void _handleFocusChange() {
     if (mounted) {
       setState(() {
-        _wrapperHasFocus = widget.focusNode.hasFocus;
         if (widget.focusNode.hasFocus) {
           widget.controller.requestFocus();
         } else {
@@ -270,42 +263,20 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
       focusNode: widget.focusNode,
       onKeyEvent: (event) {
         if (event is KeyUpEvent) {
-          /*switch (event.logicalKey.keyLabel) {
-            case keyCenter:
-              if (!_textFieldHasFocus) {
-                setState(() {
-                  _textFieldHasFocus = true;
-                });
-                widget.controller.requestFocus();
-              } else {
-                // 显示软键盘
-                SystemChannels.textInput.invokeMethod('TextInput.show');
-              }
+          switch (event.logicalKey.keyLabel) {
+            case keyLeft:
+              //widget.controller.moveCursorLeft();
               break;
-            case keyUp:
-            case keyDown:
-              if (_textFieldHasFocus) {
-                setState(() {
-                  _textFieldHasFocus = false;
-                });
-                widget.focusNode.requestFocus();
-              }
+            case keyRight:
+              //widget.controller.moveCursorRight();
               break;
-          }*/
+          }
         }
       },
-      child: Container(
-        decoration: true
-            ? BoxDecoration(
-                border: Border.all(color: Colors.white, width: 2),
-                borderRadius: BorderRadius.circular(4),
-              )
-            : null,
-        child: NativeTextField(
-          controller: widget.controller,
-          width: double.infinity,
-          height: 50,
-        ),
+      child: NativeTextField(
+        controller: widget.controller,
+        width: double.infinity,
+        height: 50,
       ),
     );
   }
