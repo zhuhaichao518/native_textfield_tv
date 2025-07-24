@@ -7,13 +7,11 @@
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'native_textfield_tv_platform_interface.dart';
-
-// 导出所有公共API
-export 'native_textfield_tv_platform_interface.dart';
 
 class NativeTextfieldTv {
   Future<String?> getPlatformVersion() {
@@ -21,47 +19,66 @@ class NativeTextfieldTv {
   }
 }
 
-/// 控制器类，用于控制NativeTextField
 class NativeTextFieldController {
-  final int _viewId;
-  final MethodChannel _channel;
+  MethodChannel? _channel;
 
-  NativeTextFieldController(this._viewId, this._channel);
-
-  /// 设置文本内容
-  Future<void> setText(String text) async {
-    await _channel.invokeMethod('setText', {'text': text});
+  static int _nextViewId = 0;
+  static int _getNextViewId() {
+    return _nextViewId++;
   }
 
-  /// 获取文本内容
+  Future<dynamic> _handleMethodCall(MethodCall call) async {
+    switch (call.method) {
+      case 'onTextChanged':
+        //final text = call.arguments as String? ?? '';
+        //widget.onChanged?.call(text);
+        break;
+      case 'onFocusChanged':
+        //final hasFocus = call.arguments as bool? ?? false;
+        //widget.onFocusChanged?.call(hasFocus);
+        break;
+    }
+  }
+
+  NativeTextFieldController() {
+    int viewId = _getNextViewId();
+    _channel = MethodChannel('native_textfield_tv_$viewId');
+    _channel!.setMethodCallHandler(_handleMethodCall);
+  }
+
+  Future<void> setText(String text) async {
+    await _channel!.invokeMethod('setText', {'text': text});
+  }
+
   Future<String> getText() async {
-    final result = await _channel.invokeMethod('getText');
+    final result = await _channel!.invokeMethod('getText');
     return result ?? '';
   }
 
-  /// 请求焦点
   Future<void> requestFocus() async {
-    await _channel.invokeMethod('requestFocus');
+    await _channel!.invokeMethod('requestFocus');
   }
 
-  /// 清除焦点
   Future<void> clearFocus() async {
-    await _channel.invokeMethod('clearFocus');
+    await _channel!.invokeMethod('clearFocus');
   }
 
-  /// 设置是否启用
   Future<void> setEnabled(bool enabled) async {
-    await _channel.invokeMethod('setEnabled', {'enabled': enabled});
+    await _channel!.invokeMethod('setEnabled', {'enabled': enabled});
   }
 
-  /// 设置提示文本
   Future<void> setHint(String hint) async {
-    await _channel.invokeMethod('setHint', {'hint': hint});
+    await _channel!.invokeMethod('setHint', {'hint': hint});
+  }
+
+  void dispose() {
+    _channel!.setMethodCallHandler(null);
   }
 }
 
 /// NativeTextField Widget
 class NativeTextField extends StatefulWidget {
+  final NativeTextFieldController? controller;
   final String? hint;
   final String? initialText;
   final FocusNode? focusNode;
@@ -73,6 +90,7 @@ class NativeTextField extends StatefulWidget {
 
   const NativeTextField({
     super.key,
+    this.controller,
     this.hint,
     this.initialText,
     this.focusNode,
@@ -88,40 +106,6 @@ class NativeTextField extends StatefulWidget {
 }
 
 class _NativeTextFieldState extends State<NativeTextField> {
-  late NativeTextFieldController _controller;
-  late MethodChannel _channel;
-  int? _viewId;
-
-  @override
-  void initState() {
-    super.initState();
-    _viewId = _getNextViewId();
-    _channel = MethodChannel('native_textfield_tv_$_viewId');
-    _controller = NativeTextFieldController(_viewId!, _channel);
-    
-    // 设置方法调用处理器
-    _channel.setMethodCallHandler(_handleMethodCall);
-  }
-
-  @override
-  void dispose() {
-    _channel.setMethodCallHandler(null);
-    super.dispose();
-  }
-
-  Future<dynamic> _handleMethodCall(MethodCall call) async {
-    switch (call.method) {
-      case 'onTextChanged':
-        final text = call.arguments as String? ?? '';
-        widget.onChanged?.call(text);
-        break;
-      case 'onFocusChanged':
-        final hasFocus = call.arguments as bool? ?? false;
-        widget.onFocusChanged?.call(hasFocus);
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> creationParams = <String, dynamic>{
@@ -143,21 +127,98 @@ class _NativeTextFieldState extends State<NativeTextField> {
 
   void _onPlatformViewCreated(int id) {
     // PlatformView创建完成后的回调
-    if (widget.focusNode != null) {
-      widget.focusNode!.addListener(_onFocusChange);
+  }
+}
+
+const String keyUp = 'Arrow Up';
+const String keyDown = 'Arrow Down';
+const String keyLeft = 'Arrow Left';
+const String keyRight = 'Arrow Right';
+const String keyCenter = 'Select';
+const String goBack = 'Go Back';
+
+class DpadNativeTextField extends StatefulWidget {
+  final FocusNode focusNode;
+  final NativeTextFieldController controller;
+
+  const DpadNativeTextField({
+    super.key,
+    required this.focusNode,
+    required this.controller,
+  });
+
+  @override
+  State<DpadNativeTextField> createState() => _DpadNativeTextFieldState();
+}
+
+class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
+  // DpadTextField or textField has focus
+  // TODO :use widget.focusNode.hasPrimaryFocus
+  bool _wapperhasFocus = false;
+  bool blockNextFocusChange = false;
+  bool _textFieldhasFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _wapperhasFocus = widget.focusNode.hasFocus;
+    widget.focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (mounted) {
+      setState(() {
+        if (widget.focusNode.hasFocus) {
+          _wapperhasFocus = widget.focusNode.hasFocus;
+        } else {
+          _wapperhasFocus = widget.focusNode.hasFocus;
+        }
+        if (!_textFieldhasFocus && widget.focusNode.hasFocus) {
+          widget.focusNode.requestFocus();
+        }
+      });
     }
   }
 
-  void _onFocusChange() {
-    if (widget.focusNode?.hasFocus == true) {
-      _controller.requestFocus();
-    } else {
-      _controller.clearFocus();
-    }
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_handleFocusChange);
+    super.dispose();
   }
 
-  static int _nextViewId = 0;
-  static int _getNextViewId() {
-    return _nextViewId++;
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardListener(
+      focusNode: widget.focusNode,
+      onKeyEvent: (event) {
+        if (event is KeyUpEvent) {
+          if (event.logicalKey.keyLabel == keyCenter && !_textFieldhasFocus) {
+            //_textFieldhasFocus = true;
+            //FocusScope.of(context).nextFocus();
+          } else if (event.logicalKey.keyLabel == keyDown && !_textFieldhasFocus) {
+            //_textFieldhasFocus = false;
+          } else if (event.logicalKey.keyLabel == keyUp && !_textFieldhasFocus) {
+            //_textFieldhasFocus = false;
+          } else if (event.logicalKey.keyLabel == keyCenter && _textFieldhasFocus){
+            //SystemChannels.textInput.invokeMethod('TextInput.show');
+          } else if (event.logicalKey.keyLabel == keyUp && _textFieldhasFocus){
+            //_textFieldhasFocus = false;
+            //widget.focusNode.requestFocus();
+          } else if (event.logicalKey.keyLabel == keyDown && _textFieldhasFocus){
+            //_textFieldhasFocus = false;
+            //widget.focusNode.requestFocus();
+          }
+        }
+      },
+      child: Container(
+        decoration: _wapperhasFocus
+            ? BoxDecoration(
+                border: Border.all(color: Colors.white, width: 2),
+                borderRadius: BorderRadius.circular(4),
+              )
+            : null,
+        child: NativeTextField(controller: widget.controller,),
+      ),
+    );
   }
 }

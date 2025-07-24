@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:native_textfield_tv/native_textfield_tv.dart';
+import 'package:native_textfield_tv_example/dpad_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,6 +18,9 @@ class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   String _textContent = '';
   final FocusNode _focusNode = FocusNode();
+
+  final FocusNode _focusNode0 = FocusNode();
+  final FocusNode _focusNode1 = FocusNode();
 
   @override
   void initState() {
@@ -80,6 +84,22 @@ class _MyAppState extends State<MyApp> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /*DpadTextField(focusNode: _focusNode0, child:                       NativeTextField(
+                        hint: '请输入文本...',
+                        initialText: '初始文本',
+                        focusNode: _focusNode1,
+                        onChanged: (text) {
+                          setState(() {
+                            _textContent = text;
+                          });
+                        },
+                        onFocusChanged: (hasFocus) {
+                          // 焦点变化处理
+                        },
+                        width: double.infinity,
+                        height: 50,
+                      ),),*/
+                      //DpadNativeTextField(focusNode: _focusNode0, controller: NativeTextFieldController(),),
                       Text(
                         'Native TextField 演示',
                         style: Theme.of(context).textTheme.titleLarge,
