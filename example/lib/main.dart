@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
 import 'package:flutter/services.dart';
 import 'package:native_textfield_tv/native_textfield_tv.dart';
 
@@ -17,7 +15,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  final _nativeTextfieldTvPlugin = NativeTextfieldTv();
+  String _textContent = '';
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -25,21 +24,14 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await _nativeTextfieldTvPlugin.getPlatformVersion() ?? 'Unknown platform version';
+      platformVersion = await NativeTextfieldTv().getPlatformVersion() ?? 'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
 
     setState(() {
@@ -50,14 +42,102 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Native TextField TV Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Native TextField TV Demo'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '平台信息',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Platform Version: $_platformVersion'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Native TextField 演示',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('输入框:'),
+                      const SizedBox(height: 8),
+                      NativeTextField(
+                        hint: '请输入文本...',
+                        initialText: '初始文本',
+                        focusNode: _focusNode,
+                        onChanged: (text) {
+                          setState(() {
+                            _textContent = text;
+                          });
+                        },
+                        onFocusChanged: (hasFocus) {
+                          // 焦点变化处理
+                        },
+                        width: double.infinity,
+                        height: 50,
+                      ),
+                      const SizedBox(height: 16),
+                      Text('当前文本内容: $_textContent'),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _focusNode.requestFocus();
+                            },
+                            icon: const Icon(Icons.keyboard),
+                            label: const Text('请求焦点'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _focusNode.unfocus();
+                            },
+                            icon: const Icon(Icons.keyboard_hide),
+                            label: const Text('清除焦点'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 }
