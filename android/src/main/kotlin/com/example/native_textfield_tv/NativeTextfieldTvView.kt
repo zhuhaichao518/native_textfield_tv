@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 
@@ -35,7 +36,7 @@ class NativeTextfieldTvView(
             // 设置初始文本
             val initialText = creationParams?.get("initialText") as? String
             if (initialText != null) {
-                setText(initialText)
+                setText(initialText.toString())
             }
         }
 
@@ -73,7 +74,7 @@ class NativeTextfieldTvView(
         when (call.method) {
             "setText" -> {
                 val text = call.argument<String>("text")
-                editText.setText(text)
+                editText.setText(text ?: "")
                 result.success(null)
             }
             "getText" -> {
