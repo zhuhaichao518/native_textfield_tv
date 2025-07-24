@@ -101,6 +101,17 @@ class NativeTextfieldTvPlugin: FlutterPlugin, MethodCallHandler {
           result.error("INVALID_INSTANCE", "View instance not found", null)
         }
       }
+      "moveCursor" -> {
+        val instanceId = call.argument<Int>("instanceId")
+        val direction = call.argument<String>("direction")
+        val view = viewInstances[instanceId]
+        if (view != null && (direction == "left" || direction == "right")) {
+          view.moveCursor(direction!!)
+          result.success(null)
+        } else {
+          result.error("INVALID_MOVE_CURSOR", "Invalid direction or view instance not found", null)
+        }
+      }
       else -> {
         result.notImplemented()
       }

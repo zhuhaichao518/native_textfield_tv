@@ -101,4 +101,20 @@ class NativeTextfieldTvView(
     fun setHint(hint: String?) {
         editText.hint = hint
     }
+
+    fun moveCursor(direction: String) {
+        val pos = editText.selectionStart
+        when (direction) {
+            "left" -> {
+                if (pos > 0) {
+                    editText.setSelection(pos - 1)
+                }
+            }
+            "right" -> {
+                if (pos < (editText.text?.length ?: 0)) {
+                    editText.setSelection(pos + 1)
+                }
+            }
+        }
+    }
 } 

@@ -94,6 +94,20 @@ class NativeTextFieldController {
     });
   }
 
+  Future<void> moveCursorLeft() async {
+    await _channel.invokeMethod('moveCursor', {
+      'instanceId': _instanceId,
+      'direction': 'left',
+    });
+  }
+
+  Future<void> moveCursorRight() async {
+    await _channel.invokeMethod('moveCursor', {
+      'instanceId': _instanceId,
+      'direction': 'right',
+    });
+  }
+
   void dispose() {
     _instances.remove(_instanceId);
     if (_instances.isEmpty) {
@@ -233,6 +247,8 @@ class DpadNativeTextField extends StatefulWidget {
 }
 
 class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
+  bool _textFieldHasFocus = false;
+
   @override
   void initState() {
     super.initState();
@@ -265,10 +281,10 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
         if (event is KeyUpEvent) {
           switch (event.logicalKey.keyLabel) {
             case keyLeft:
-              //widget.controller.moveCursorLeft();
+              widget.controller.moveCursorLeft();
               break;
             case keyRight:
-              //widget.controller.moveCursorRight();
+              widget.controller.moveCursorRight();
               break;
           }
         }
