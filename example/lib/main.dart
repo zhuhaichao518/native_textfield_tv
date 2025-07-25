@@ -19,11 +19,13 @@ class _MyAppState extends State<MyApp> {
 
   final FocusNode _firstTextFieldFocus = FocusNode();
   final FocusNode _secondTextFieldFocus = FocusNode();
+  final FocusNode _thirdTextFieldFocus = FocusNode();
 
-  final NativeTextFieldController _firstController =
-      NativeTextFieldController();
-  final NativeTextFieldController _secondController =
-      NativeTextFieldController(text: 'Initial text');
+  // 使用同一个 controller 管理多个文本框
+  final NativeTextFieldController _sharedController = NativeTextFieldController();
+  
+  // 独立的 controller
+  final NativeTextFieldController _independentController = NativeTextFieldController();
 
   @override
   void initState() {
@@ -90,7 +92,7 @@ class _MyAppState extends State<MyApp> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Native TextField Demo',
+                        'Shared Controller Demo (多个文本框共享同一个controller)',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
@@ -98,47 +100,77 @@ class _MyAppState extends State<MyApp> {
                         children: [
                           ElevatedButton.icon(
                             onPressed: () {
-                              _secondController.setText('New text from button');
+                              _sharedController.setText('共享文本更新');
                               setState(() {
-                                _textContent = _secondController.text;
+                                _textContent = _sharedController.text;
                               });
                             },
                             icon: const Icon(Icons.edit),
-                            label: const Text('Set Text'),
+                            label: const Text('更新共享文本'),
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
                             onPressed: () {
-                              _secondController.clear();
+                              _sharedController.clear();
                               setState(() {
-                                _textContent = _secondController.text;
+                                _textContent = _sharedController.text;
                               });
                             },
                             icon: const Icon(Icons.clear),
-                            label: const Text('Clear Text'),
+                            label: const Text('清空共享文本'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
+                      Text('共享Controller的文本框1:'),
                       DpadNativeTextField(
                         focusNode: _firstTextFieldFocus,
-                        controller: _firstController,
+                        controller: _sharedController,
                       ),
                       const SizedBox(height: 16),
+                      Text('共享Controller的文本框2:'),
                       DpadNativeTextField(
                         focusNode: _secondTextFieldFocus,
-                        controller: _secondController,
+                        controller: _sharedController,
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _firstTextFieldFocus.requestFocus();
-                        },
-                        icon: const Icon(Icons.keyboard),
-                        label: const Text('Focus to First TextField'),
+                      Text('独立Controller的文本框:'),
+                      DpadNativeTextField(
+                        focusNode: _thirdTextFieldFocus,
+                        controller: _independentController,
                       ),
                       const SizedBox(height: 16),
-                      Text('Current text content: $_textContent'),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _firstTextFieldFocus.requestFocus();
+                            },
+                            icon: const Icon(Icons.keyboard),
+                            label: const Text('焦点到共享文本框1'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _secondTextFieldFocus.requestFocus();
+                            },
+                            icon: const Icon(Icons.keyboard),
+                            label: const Text('焦点到共享文本框2'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _thirdTextFieldFocus.requestFocus();
+                            },
+                            icon: const Icon(Icons.keyboard),
+                            label: const Text('焦点到独立文本框'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text('共享Controller当前文本: $_textContent'),
+                      const SizedBox(height: 8),
+                      Text('独立Controller当前文本: ${_independentController.text}'),
                     ],
                   ),
                 ),
@@ -154,8 +186,9 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     _firstTextFieldFocus.dispose();
     _secondTextFieldFocus.dispose();
-    _firstController.dispose();
-    _secondController.dispose();
+    _thirdTextFieldFocus.dispose();
+    _sharedController.dispose();
+    _independentController.dispose();
     super.dispose();
   }
 }

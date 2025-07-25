@@ -17,15 +17,29 @@ class NativeTextFieldController extends TextEditingController {
   static final Map<int, NativeTextFieldController> _instances = {};
   static int _nextInstanceId = 0;
 
-  final int _instanceId;
+  // 存储该 controller 管理的所有 instanceId
+  final Set<int> _managedInstanceIds = {};
   ValueChanged<bool>? onFocusChanged;
   bool _isUpdatingFromNative = false;
 
-  NativeTextFieldController({String? text}) : _instanceId = _nextInstanceId++ {
-    _instances[_instanceId] = this;
+  NativeTextFieldController({String? text}) {
     if (text != null) {
       super.text = text;
     }
+  }
+
+  // 注册一个新的 instanceId 到当前 controller
+  int _registerInstance() {
+    final instanceId = _nextInstanceId++;
+    _managedInstanceIds.add(instanceId);
+    _instances[instanceId] = this;
+    return instanceId;
+  }
+
+  // 注销一个 instanceId
+  void _unregisterInstance(int instanceId) {
+    _managedInstanceIds.remove(instanceId);
+    _instances.remove(instanceId);
   }
 
   static Future<dynamic> _handleMethodCall(MethodCall call) async {
@@ -57,17 +71,19 @@ class NativeTextFieldController extends TextEditingController {
   @override
   void notifyListeners() {
     super.notifyListeners();
-    // 只有当不是从原生端更新时才同步到原生端
+    // 只有当不是从原生端更新时才同步到所有管理的实例
     if (!_isUpdatingFromNative) {
-      _syncToNative();
+      _syncToAllNativeInstances();
     }
   }
 
-  void _syncToNative() {
-    _channel.invokeMethod('setText', {
-      'instanceId': _instanceId,
-      'text': text,
-    });
+  void _syncToAllNativeInstances() {
+    for (final instanceId in _managedInstanceIds) {
+      _channel.invokeMethod('setText', {
+        'instanceId': instanceId,
+        'text': text,
+      });
+    }
   }
 
   Future<void> setText(String text) async {
@@ -75,55 +91,84 @@ class NativeTextFieldController extends TextEditingController {
   }
 
   Future<String> getText() async {
-    final result = await _channel.invokeMethod('getText', {
-      'instanceId': _instanceId,
-    });
-    return result ?? '';
+    // 如果有管理的实例，从第一个实例获取文本
+    if (_managedInstanceIds.isNotEmpty) {
+      final firstInstanceId = _managedInstanceIds.first;
+      final result = await _channel.invokeMethod('getText', {
+        'instanceId': firstInstanceId,
+      });
+      return result ?? '';
+    }
+    return text;
   }
 
   Future<void> requestFocus() async {
-    await _channel.invokeMethod('requestFocus', {
-      'instanceId': _instanceId,
-    });
+    // 请求第一个实例的焦点
+    if (_managedInstanceIds.isNotEmpty) {
+      final firstInstanceId = _managedInstanceIds.first;
+      await _channel.invokeMethod('requestFocus', {
+        'instanceId': firstInstanceId,
+      });
+    }
   }
 
   Future<void> clearFocus() async {
-    await _channel.invokeMethod('clearFocus', {
-      'instanceId': _instanceId,
-    });
+    // 清除所有实例的焦点
+    for (final instanceId in _managedInstanceIds) {
+      await _channel.invokeMethod('clearFocus', {
+        'instanceId': instanceId,
+      });
+    }
   }
 
   Future<void> setEnabled(bool enabled) async {
-    await _channel.invokeMethod('setEnabled', {
-      'instanceId': _instanceId,
-      'enabled': enabled,
-    });
+    // 设置所有实例的启用状态
+    for (final instanceId in _managedInstanceIds) {
+      await _channel.invokeMethod('setEnabled', {
+        'instanceId': instanceId,
+        'enabled': enabled,
+      });
+    }
   }
 
   Future<void> setHint(String hint) async {
-    await _channel.invokeMethod('setHint', {
-      'instanceId': _instanceId,
-      'hint': hint,
-    });
+    // 设置所有实例的提示文本
+    for (final instanceId in _managedInstanceIds) {
+      await _channel.invokeMethod('setHint', {
+        'instanceId': instanceId,
+        'hint': hint,
+      });
+    }
   }
 
   Future<void> moveCursorLeft() async {
-    await _channel.invokeMethod('moveCursor', {
-      'instanceId': _instanceId,
-      'direction': 'left',
-    });
+    // 移动第一个实例的光标
+    if (_managedInstanceIds.isNotEmpty) {
+      final firstInstanceId = _managedInstanceIds.first;
+      await _channel.invokeMethod('moveCursor', {
+        'instanceId': firstInstanceId,
+        'direction': 'left',
+      });
+    }
   }
 
   Future<void> moveCursorRight() async {
-    await _channel.invokeMethod('moveCursor', {
-      'instanceId': _instanceId,
-      'direction': 'right',
-    });
+    // 移动第一个实例的光标
+    if (_managedInstanceIds.isNotEmpty) {
+      final firstInstanceId = _managedInstanceIds.first;
+      await _channel.invokeMethod('moveCursor', {
+        'instanceId': firstInstanceId,
+        'direction': 'right',
+      });
+    }
   }
 
   @override
   void dispose() {
-    _instances.remove(_instanceId);
+    // 清理所有管理的实例
+    for (final instanceId in _managedInstanceIds.toList()) {
+      _unregisterInstance(instanceId);
+    }
     if (_instances.isEmpty) {
       _channel.setMethodCallHandler(null);
     }
@@ -163,6 +208,7 @@ class NativeTextField extends StatefulWidget {
 class _NativeTextFieldState extends State<NativeTextField> {
   late NativeTextFieldController _controller;
   bool _isControllerCreated = false;
+  late int _instanceId;
 
   @override
   void initState() {
@@ -173,6 +219,9 @@ class _NativeTextFieldState extends State<NativeTextField> {
       _controller = NativeTextFieldController();
       _isControllerCreated = true;
     }
+
+    // 注册实例并获取 instanceId
+    _instanceId = _controller._registerInstance();
 
     // 设置回调
     if (widget.onChanged != null) {
@@ -189,6 +238,9 @@ class _NativeTextFieldState extends State<NativeTextField> {
   void didUpdateWidget(NativeTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
+      // 注销旧的实例
+      _controller._unregisterInstance(_instanceId);
+      
       if (oldWidget.controller == null && widget.controller != null) {
         _controller = widget.controller!;
         _isControllerCreated = false;
@@ -196,6 +248,9 @@ class _NativeTextFieldState extends State<NativeTextField> {
         _controller = NativeTextFieldController();
         _isControllerCreated = true;
       }
+
+      // 注册新的实例
+      _instanceId = _controller._registerInstance();
 
       // 重新设置回调
       if (widget.onChanged != null) {
@@ -210,7 +265,7 @@ class _NativeTextFieldState extends State<NativeTextField> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> creationParams = <String, dynamic>{
-      'instanceId': _controller._instanceId,
+      'instanceId': _instanceId,
       'hint': widget.hint,
       'initialText': widget.initialText,
     };
@@ -237,6 +292,9 @@ class _NativeTextFieldState extends State<NativeTextField> {
 
   @override
   void dispose() {
+    // 注销实例
+    _controller._unregisterInstance(_instanceId);
+    
     if (_isControllerCreated) {
       _controller.dispose();
     }

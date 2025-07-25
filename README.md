@@ -1,286 +1,194 @@
-# Native TextField TV
+# native_textfield_tv
 
-A Flutter plugin that provides native Android EditText component as a solution for Android TV remote control issues with Flutter's default TextField.
+一个用于 Android TV 的原生文本输入框 Flutter 插件，支持 D-pad 导航。
 
-## 🚨 Problem Statement
+## 特性
 
-According to [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924) and [Flutter issue #147772](https://github.com/flutter/flutter/issues/147772), Flutter's default `TextField` has multiple issues with TV remotes on Android TV devices:
+- 🎮 支持 Android TV D-pad 导航
+- 📱 原生 Android EditText 实现
+- 🔄 双向数据同步
+- 🎯 焦点管理
+- 🎨 可自定义样式
+- 🔗 支持一个 Controller 管理多个文本框实例
 
-- **Issue #154924**: The keyboard appears but arrow key navigation through letters doesn't work because the Flutter app keeps focus
-- **Issue #147772**: D-pad navigation is broken after closing the keyboard, preventing focus changes between TextFields
+## 设计理念
 
-**This plugin provides a native Android solution** that bypasses these limitations by using Android's native `EditText` component through PlatformView.
+### instanceId 与 NativeTextField 绑定
 
-## ✨ Features
+每个 `NativeTextField` 实例都有自己唯一的 `instanceId`，这个 ID 用于在 Flutter 和原生 Android 之间进行通信。
 
-- **Android TV Remote Compatible**: Works perfectly with TV remote controls
-- **Native Android EditText**: Uses Android's native text input component
-- **Full TextEditingController Compatibility**: Inherits from TextEditingController for seamless integration
-- **Focus Management**: Complete focus control with FocusNode support
-- **Real-time Text Access**: Get and set text content in real-time
-- **Customizable**: Support for hints, initial text, and styling
-- **Platform Support**: Currently supports Android (TV and mobile)
+### 一个 Controller 可以管理多个 instanceId
 
-## 🎯 Use Cases
+`NativeTextFieldController` 可以管理多个 `NativeTextField` 实例，实现以下功能：
 
-- **Android TV Apps**: Perfect for apps that need text input on Android TV
-- **Chromecast Apps**: Solves the remote control input issue on Chromecast devices
-- **TV Remote Navigation**: Full compatibility with TV remote arrow keys and selection
-- **Legacy Flutter Apps**: Drop-in replacement for problematic TextField instances
+- **数据同步**：当 controller 的文本发生变化时，所有关联的文本框都会同步更新
+- **统一控制**：可以通过 controller 统一控制所有关联的文本框
+- **资源管理**：controller 负责管理所有关联实例的生命周期
 
-## 📦 Installation
+## 安装
 
-Add this to your `pubspec.yaml`:
+在 `pubspec.yaml` 中添加依赖：
 
 ```yaml
 dependencies:
-  native_textfield_tv: ^0.0.2
+  native_textfield_tv: ^1.0.0
 ```
 
-## 🚀 Usage
+## 使用方法
+
+### 基本用法
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:native_textfield_tv/native_textfield_tv.dart';
 
-void main() {
-  runApp(const MyApp());
+class MyWidget extends StatefulWidget {
+  @override
+  _MyWidgetState createState() => _MyWidgetState();
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  String _textContent = '';
-  
-  final ScrollController _scrollController = ScrollController();
-  
-  final FocusNode _firstTextFieldFocus = FocusNode();
-  final FocusNode _secondTextFieldFocus = FocusNode();
-  
-  final NativeTextFieldController _firstController = NativeTextFieldController();
-  final NativeTextFieldController _secondController = NativeTextFieldController(text: 'Initial text');
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-  }
-
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    try {
-      platformVersion = await NativeTextfieldTv().getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
-  }
+class _MyWidgetState extends State<MyWidget> {
+  final NativeTextFieldController _controller = NativeTextFieldController();
+  final FocusNode _focusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Native TextField TV Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      home: Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: const Text('Native TextField TV Demo'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Platform Info',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Platform Version: $_platformVersion'),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Native TextField Demo',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              _secondController.setText('New text from button');
-                              setState(() {
-                                _textContent = _secondController.text;
-                              });
-                            },
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Set Text'),
-                          ),
-                          const SizedBox(width: 10),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              _secondController.clear();
-                              setState(() {
-                                _textContent = _secondController.text;
-                              });
-                            },
-                            icon: const Icon(Icons.clear),
-                            label: const Text('Clear Text'),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      DpadNativeTextField(
-                        focusNode: _firstTextFieldFocus, 
-                        controller: _firstController,
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      DpadNativeTextField(
-                        focusNode: _secondTextFieldFocus, 
-                        controller: _secondController,
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _firstTextFieldFocus.requestFocus();
-                        },
-                        icon: const Icon(Icons.keyboard),
-                        label: const Text('Focus to First TextField'),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      Text('Current text content: $_textContent'),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return DpadNativeTextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      height: 48,
     );
   }
 
   @override
   void dispose() {
-    _firstTextFieldFocus.dispose();
-    _secondTextFieldFocus.dispose();
-    _firstController.dispose();
-    _secondController.dispose();
-    _scrollController.dispose();
+    _focusNode.dispose();
+    _controller.dispose();
     super.dispose();
   }
 }
 ```
 
-## 📚 API Reference
+### 共享 Controller 示例
 
-### NativeTextField
+```dart
+class SharedControllerExample extends StatefulWidget {
+  @override
+  _SharedControllerExampleState createState() => _SharedControllerExampleState();
+}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `hint` | `String?` | Hint text |
-| `initialText` | `String?` | Initial text |
-| `focusNode` | `FocusNode?` | Focus node for TV remote navigation |
-| `onChanged` | `ValueChanged<String>?` | Text change callback |
-| `onFocusChanged` | `ValueChanged<bool>?` | Focus change callback |
-| `enabled` | `bool` | Whether the field is enabled, defaults to true |
-| `width` | `double?` | Width of the field |
-| `height` | `double?` | Height of the field |
+class _SharedControllerExampleState extends State<SharedControllerExample> {
+  // 一个 controller 管理多个文本框
+  final NativeTextFieldController _sharedController = NativeTextFieldController();
+  final FocusNode _focusNode1 = FocusNode();
+  final FocusNode _focusNode2 = FocusNode();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // 第一个文本框
+        DpadNativeTextField(
+          controller: _sharedController,
+          focusNode: _focusNode1,
+        ),
+        SizedBox(height: 16),
+        // 第二个文本框 - 共享同一个 controller
+        DpadNativeTextField(
+          controller: _sharedController,
+          focusNode: _focusNode2,
+        ),
+        SizedBox(height: 16),
+        // 控制按钮
+        ElevatedButton(
+          onPressed: () {
+            _sharedController.setText('更新所有文本框');
+          },
+          child: Text('更新文本'),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _focusNode1.dispose();
+    _focusNode2.dispose();
+    _sharedController.dispose();
+    super.dispose();
+  }
+}
+```
+
+## API 参考
 
 ### NativeTextFieldController
 
-**Inherits from TextEditingController, providing all TextEditingController functionality:**
+控制器类，继承自 `TextEditingController`。
 
-| Property/Method | Type | Description |
-|-----------------|------|-------------|
-| `text` | `String` | Text content (inherited from TextEditingController) |
-| `selection` | `TextSelection` | Text selection (inherited from TextEditingController) |
-| `addListener(VoidCallback listener)` | `void` | Add listener (inherited from TextEditingController) |
-| `removeListener(VoidCallback listener)` | `void` | Remove listener (inherited from TextEditingController) |
-| `clear()` | `void` | Clear text (inherited from TextEditingController) |
-| `setText(String text)` | `Future<void>` | Set text content |
-| `getText()` | `Future<String>` | Get text content |
-| `requestFocus()` | `Future<void>` | Request focus |
-| `clearFocus()` | `Future<void>` | Clear focus |
-| `setEnabled(bool enabled)` | `Future<void>` | Set enabled state |
-| `setHint(String hint)` | `Future<void>` | Set hint text |
-| `onFocusChanged` | `ValueChanged<bool>?` | Focus change callback |
+#### 构造函数
 
-## 🌐 Platform Support
-
-- ✅ **Android** (TV and Mobile) - Uses PlatformView with native EditText
-- ❌ iOS (Not implemented yet)
-- ❌ Web (Not implemented yet)
-
-## 🔧 Development Notes
-
-This plugin uses Flutter's PlatformView mechanism to create native EditText components on Android. Communication between Flutter and native code is achieved through MethodChannel.
-
-**Key Update:** NativeTextFieldController now inherits from TextEditingController, which means:
-
-1. **Full Compatibility**: Can be used anywhere a TextEditingController is expected
-2. **Synchronous Operations**: Supports synchronous text operations (e.g., `controller.text = 'new text'`)
-3. **Listener Support**: Supports `addListener` and `removeListener`
-4. **Auto-Sync**: Text changes automatically sync to native side
-5. **Bidirectional Binding**: Native text changes also sync to Flutter side
-
-### Why This Solution?
-
-The [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924) describes a problem where Flutter's default TextField doesn't work properly with TV remotes on Android TV devices. The keyboard appears but arrow key navigation through letters doesn't work because the Flutter app keeps focus.
-
-This plugin provides a native Android solution that bypasses this limitation by using Android's native `EditText` component, which handles TV remote input correctly.
-
-### Project Structure
-
+```dart
+NativeTextFieldController({String? text})
 ```
-lib/
-├── native_textfield_tv.dart              # Main API
-├── native_textfield_tv_platform_interface.dart  # 平台接口
-└── native_textfield_tv_method_channel.dart      # 方法通道实现
 
-android/src/main/kotlin/com/example/native_textfield_tv/
-├── NativeTextfieldTvPlugin.kt            # Plugin main class
-└── NativeTextfieldTvView.kt              # PlatformView implementation
-```
+#### 方法
+
+- `Future<void> setText(String text)` - 设置文本
+- `Future<String> getText()` - 获取文本
+- `Future<void> requestFocus()` - 请求焦点
+- `Future<void> clearFocus()` - 清除焦点
+- `Future<void> setEnabled(bool enabled)` - 设置启用状态
+- `Future<void> setHint(String hint)` - 设置提示文本
+- `Future<void> moveCursorLeft()` - 向左移动光标
+- `Future<void> moveCursorRight()` - 向右移动光标
+
+### NativeTextField
+
+原生文本输入框组件。
+
+#### 属性
+
+- `controller` - 控制器
+- `hint` - 提示文本
+- `initialText` - 初始文本
+- `focusNode` - 焦点节点
+- `onChanged` - 文本变化回调
+- `onFocusChanged` - 焦点变化回调
+- `enabled` - 是否启用
+- `width` - 宽度
+- `height` - 高度
+
+### DpadNativeTextField
+
+支持 D-pad 导航的文本输入框组件。
+
+#### 属性
+
+- `focusNode` - 焦点节点（必需）
+- `controller` - 控制器（必需）
+- `height` - 高度（默认 48）
+
+## 键盘事件
+
+支持以下键盘事件：
+
+- `Arrow Left` - 向左移动光标
+- `Arrow Right` - 向右移动光标
+- `Select` - 确认选择
+
+## 注意事项
+
+1. **生命周期管理**：确保在 dispose 时正确释放 `FocusNode` 和 `NativeTextFieldController`
+2. **焦点管理**：使用 `FocusNode` 来管理焦点状态
+3. **数据同步**：controller 会自动同步所有关联文本框的数据
+4. **资源清理**：controller 会自动管理所有关联实例的资源
+
+## 示例
+
+查看 `example/lib/main.dart` 获取完整的使用示例。
+
+## 许可证
+
+MIT License
 
 
