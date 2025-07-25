@@ -51,6 +51,7 @@ class NativeTextField extends StatefulWidget {
   final bool enabled;
   final double? width;
   final double? height;
+  final bool obscureText;
 
   const NativeTextField({
     super.key,
@@ -63,6 +64,7 @@ class NativeTextField extends StatefulWidget {
     this.enabled = true,
     this.width,
     this.height,
+    this.obscureText = false,
   });
 
   @override
@@ -206,6 +208,7 @@ class _NativeTextFieldState extends State<NativeTextField> {
       'instanceId': _instanceId,
       'hint': widget.hint,
       'initialText': widget.initialText,
+      'obscureText': widget.obscureText,
     };
 
     Widget child = AndroidView(
@@ -262,12 +265,14 @@ class DpadNativeTextField extends StatefulWidget {
   final FocusNode focusNode;
   final NativeTextFieldController controller;
   final double height;
+  final bool obscureText;
 
   const DpadNativeTextField({
     super.key,
     required this.focusNode,
     required this.controller,
     this.height = 48,
+    this.obscureText = false,
   });
 
   @override
@@ -322,6 +327,7 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
         controller: widget.controller,
         width: double.infinity,
         height: widget.height,
+        obscureText: widget.obscureText,
       ),
     );
   }

@@ -38,6 +38,12 @@ class NativeTextfieldTvView(
             if (initialText != null) {
                 setText(initialText.toString())
             }
+            
+            // 设置密码模式
+            val obscureText = creationParams?.get("obscureText") as? Boolean ?: false
+            if (obscureText) {
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
         }
 
         // 使用统一的MethodChannel
