@@ -267,11 +267,13 @@ const String goBack = 'Go Back';
 class DpadNativeTextField extends StatefulWidget {
   final FocusNode focusNode;
   final NativeTextFieldController controller;
+  final double height;
 
   const DpadNativeTextField({
     super.key,
     required this.focusNode,
     required this.controller,
+    this.height = 48,
   });
 
   @override
@@ -322,7 +324,7 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
       child: NativeTextField(
         controller: widget.controller,
         width: double.infinity,
-        height: 50,
+        height: widget.height,
       ),
     );
   }
