@@ -11,14 +11,6 @@ class NativeTextfieldTv {
 }
 
 class NativeTextFieldController extends TextEditingController {
-  static const MethodChannel _channel = MethodChannel('native_textfield_tv');
-
-  // 存储所有活跃的控制器实例，用于处理回调
-  static final Map<int, NativeTextFieldController> _instances = {};
-  static int _nextInstanceId = 0;
-
-  // 存储该 controller 管理的所有 instanceId
-  final Set<int> _managedInstanceIds = {};
   ValueChanged<bool>? onFocusChanged;
   bool _isUpdatingFromNative = false;
 
@@ -28,154 +20,22 @@ class NativeTextFieldController extends TextEditingController {
     }
   }
 
-  // 注册一个新的 instanceId 到当前 controller
-  int _registerInstance() {
-    final instanceId = _nextInstanceId++;
-    _managedInstanceIds.add(instanceId);
-    _instances[instanceId] = this;
-    return instanceId;
-  }
-
-  // 注销一个 instanceId
-  void _unregisterInstance(int instanceId) {
-    _managedInstanceIds.remove(instanceId);
-    _instances.remove(instanceId);
-  }
-
-  static Future<dynamic> _handleMethodCall(MethodCall call) async {
-    final instanceId = call.arguments['instanceId'] as int?;
-    final controller = _instances[instanceId];
-
-    if (controller == null) return;
-
-    switch (call.method) {
-      case 'onTextChanged':
-        final text = call.arguments['text'] as String? ?? '';
-        controller._isUpdatingFromNative = true;
-        if (controller.text != text) {
-          controller.text = text;
-        }
-        controller._isUpdatingFromNative = false;
-        break;
-      case 'onFocusChanged':
-        final hasFocus = call.arguments['hasFocus'] as bool? ?? false;
-        controller.onFocusChanged?.call(hasFocus);
-        break;
+  void _setTextFromNative(String text) {
+    _isUpdatingFromNative = true;
+    if (this.text != text) {
+      this.text = text;
     }
+    _isUpdatingFromNative = false;
   }
 
-  static void _initializeChannel() {
-    _channel.setMethodCallHandler(_handleMethodCall);
-  }
-
-  @override
-  void notifyListeners() {
-    super.notifyListeners();
-    // 只有当不是从原生端更新时才同步到所有管理的实例
-    if (!_isUpdatingFromNative) {
-      _syncToAllNativeInstances();
-    }
-  }
-
-  void _syncToAllNativeInstances() {
-    for (final instanceId in _managedInstanceIds) {
-      _syncToNativeInstance(instanceId);
-    }
-  }
-
-  void _syncToNativeInstance(int instanceId) {
-    _channel.invokeMethod('setText', {
-      'instanceId': instanceId,
-      'text': text,
-    });
-  }
+  bool get isUpdatingFromNative => _isUpdatingFromNative;
 
   Future<void> setText(String text) async {
     this.text = text;
   }
 
-  Future<String> getText() async {
-    // 如果有管理的实例，从第一个实例获取文本
-    if (_managedInstanceIds.isNotEmpty) {
-      final firstInstanceId = _managedInstanceIds.first;
-      final result = await _channel.invokeMethod('getText', {
-        'instanceId': firstInstanceId,
-      });
-      return result ?? '';
-    }
-    return text;
-  }
-
-  Future<void> requestFocus() async {
-    // 请求第一个实例的焦点
-    if (_managedInstanceIds.isNotEmpty) {
-      final firstInstanceId = _managedInstanceIds.first;
-      await _channel.invokeMethod('requestFocus', {
-        'instanceId': firstInstanceId,
-      });
-    }
-  }
-
-  Future<void> clearFocus() async {
-    // 清除所有实例的焦点
-    for (final instanceId in _managedInstanceIds) {
-      await _channel.invokeMethod('clearFocus', {
-        'instanceId': instanceId,
-      });
-    }
-  }
-
-  Future<void> setEnabled(bool enabled) async {
-    // 设置所有实例的启用状态
-    for (final instanceId in _managedInstanceIds) {
-      await _channel.invokeMethod('setEnabled', {
-        'instanceId': instanceId,
-        'enabled': enabled,
-      });
-    }
-  }
-
-  Future<void> setHint(String hint) async {
-    // 设置所有实例的提示文本
-    for (final instanceId in _managedInstanceIds) {
-      await _channel.invokeMethod('setHint', {
-        'instanceId': instanceId,
-        'hint': hint,
-      });
-    }
-  }
-
-  Future<void> moveCursorLeft() async {
-    // 移动第一个实例的光标
-    if (_managedInstanceIds.isNotEmpty) {
-      final firstInstanceId = _managedInstanceIds.first;
-      await _channel.invokeMethod('moveCursor', {
-        'instanceId': firstInstanceId,
-        'direction': 'left',
-      });
-    }
-  }
-
-  Future<void> moveCursorRight() async {
-    // 移动第一个实例的光标
-    if (_managedInstanceIds.isNotEmpty) {
-      final firstInstanceId = _managedInstanceIds.first;
-      await _channel.invokeMethod('moveCursor', {
-        'instanceId': firstInstanceId,
-        'direction': 'right',
-      });
-    }
-  }
-
   @override
   void dispose() {
-    // 清理所有管理的实例
-    for (final instanceId in _managedInstanceIds.toList()) {
-      _unregisterInstance(instanceId);
-    }
-    if (_instances.isEmpty) {
-      _channel.setMethodCallHandler(null);
-    }
     super.dispose();
   }
 }
@@ -213,10 +73,16 @@ class _NativeTextFieldState extends State<NativeTextField> {
   late NativeTextFieldController _controller;
   bool _isControllerCreated = false;
   late int _instanceId;
+  static int _nextInstanceId = 0;
+  static const MethodChannel _channel = MethodChannel('native_textfield_tv');
+  static final Map<int, _NativeTextFieldState> _instances = {};
 
   @override
   void initState() {
     super.initState();
+    _instanceId = _nextInstanceId++;
+    _instances[_instanceId] = this;
+    
     if (widget.controller != null) {
       _controller = widget.controller!;
     } else {
@@ -224,26 +90,94 @@ class _NativeTextFieldState extends State<NativeTextField> {
       _isControllerCreated = true;
     }
 
-    // 注册实例并获取 instanceId
-    _instanceId = _controller._registerInstance();
-
     // 设置回调
     if (widget.onChanged != null) {
       _controller.addListener(() {
-        widget.onChanged!(_controller.text);
+        if (!_controller.isUpdatingFromNative) {
+          widget.onChanged!(_controller.text);
+        }
       });
     }
     _controller.onFocusChanged = widget.onFocusChanged;
 
-    NativeTextFieldController._initializeChannel();
+    // 监听 controller 的文本变化，同步到原生端
+    _controller.addListener(_onControllerTextChanged);
+
+    _initializeChannel();
+  }
+
+  void _onControllerTextChanged() {
+    if (!_controller.isUpdatingFromNative) {
+      _syncToNative();
+    }
+  }
+
+  static Future<dynamic> _handleMethodCall(MethodCall call) async {
+    final instanceId = call.arguments['instanceId'] as int?;
+    final instance = _instances[instanceId];
+
+    if (instance == null) return;
+
+    switch (call.method) {
+      case 'onTextChanged':
+        final text = call.arguments['text'] as String? ?? '';
+        instance._controller._setTextFromNative(text);
+        break;
+      case 'onFocusChanged':
+        final hasFocus = call.arguments['hasFocus'] as bool? ?? false;
+        instance._controller.onFocusChanged?.call(hasFocus);
+        break;
+    }
+  }
+
+  static void _initializeChannel() {
+    _channel.setMethodCallHandler(_handleMethodCall);
+  }
+
+  void _syncToNative() {
+    _channel.invokeMethod('setText', {
+      'instanceId': _instanceId,
+      'text': _controller.text,
+    });
+  }
+
+  Future<void> requestFocus() async {
+    await _channel.invokeMethod('requestFocus', {
+      'instanceId': _instanceId,
+    });
+  }
+
+  Future<void> clearFocus() async {
+    await _channel.invokeMethod('clearFocus', {
+      'instanceId': _instanceId,
+    });
+  }
+
+  Future<void> moveCursorLeft() async {
+    await _channel.invokeMethod('moveCursor', {
+      'instanceId': _instanceId,
+      'direction': 'left',
+    });
+  }
+
+  Future<void> moveCursorRight() async {
+    await _channel.invokeMethod('moveCursor', {
+      'instanceId': _instanceId,
+      'direction': 'right',
+    });
   }
 
   @override
   void didUpdateWidget(NativeTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
-      // 注销旧的实例
-      _controller._unregisterInstance(_instanceId);
+      // 清理旧的监听器
+      _controller.removeListener(_onControllerTextChanged);
+      if (oldWidget.onChanged != null) {
+        _controller.removeListener(() {
+          oldWidget.onChanged!(_controller.text);
+        });
+      }
       
       if (oldWidget.controller == null && widget.controller != null) {
         _controller = widget.controller!;
@@ -253,16 +187,16 @@ class _NativeTextFieldState extends State<NativeTextField> {
         _isControllerCreated = true;
       }
 
-      // 注册新的实例
-      _instanceId = _controller._registerInstance();
-
       // 重新设置回调
       if (widget.onChanged != null) {
         _controller.addListener(() {
-          widget.onChanged!(_controller.text);
+          if (!_controller.isUpdatingFromNative) {
+            widget.onChanged!(_controller.text);
+          }
         });
       }
       _controller.onFocusChanged = widget.onFocusChanged;
+      _controller.addListener(_onControllerTextChanged);
     }
   }
 
@@ -297,14 +231,18 @@ class _NativeTextFieldState extends State<NativeTextField> {
     // 如果 controller 有文本内容且与 initialText 不同，则同步到原生端
     if (_controller.text.isNotEmpty && 
         _controller.text != widget.initialText) {
-      _controller._syncToNativeInstance(_instanceId);
+      _syncToNative();
     }
   }
 
   @override
   void dispose() {
-    // 注销实例
-    _controller._unregisterInstance(_instanceId);
+    _instances.remove(_instanceId);
+    if (_instances.isEmpty) {
+      _channel.setMethodCallHandler(null);
+    }
+    
+    _controller.removeListener(_onControllerTextChanged);
     
     if (_isControllerCreated) {
       _controller.dispose();
@@ -337,6 +275,8 @@ class DpadNativeTextField extends StatefulWidget {
 }
 
 class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
+  final GlobalKey<_NativeTextFieldState> _nativeTextFieldKey = GlobalKey<_NativeTextFieldState>();
+
   @override
   void initState() {
     super.initState();
@@ -347,9 +287,9 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
     if (mounted) {
       setState(() {
         if (widget.focusNode.hasFocus) {
-          widget.controller.requestFocus();
+          _nativeTextFieldKey.currentState?.requestFocus();
         } else {
-          widget.controller.clearFocus();
+          _nativeTextFieldKey.currentState?.clearFocus();
         }
       });
     }
@@ -369,15 +309,16 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
         if (event is KeyUpEvent) {
           switch (event.logicalKey.keyLabel) {
             case keyLeft:
-              widget.controller.moveCursorLeft();
+              _nativeTextFieldKey.currentState?.moveCursorLeft();
               break;
             case keyRight:
-              widget.controller.moveCursorRight();
+              _nativeTextFieldKey.currentState?.moveCursorRight();
               break;
           }
         }
       },
       child: NativeTextField(
+        key: _nativeTextFieldKey,
         controller: widget.controller,
         width: double.infinity,
         height: widget.height,
