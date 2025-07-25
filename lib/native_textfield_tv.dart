@@ -1,10 +1,3 @@
-// You have generated a new plugin project without specifying the `--platforms`
-// flag. A plugin project with no platform support was generated. To add a
-// platform, run `flutter create -t plugin --platforms <platforms> .` under the
-// same directory. You can also find a detailed instruction on how to add
-// platforms in the `pubspec.yaml` at
-// https://flutter.dev/to/pubspec-plugin-platforms.
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,11 +12,11 @@ class NativeTextfieldTv {
 
 class NativeTextFieldController extends TextEditingController {
   static const MethodChannel _channel = MethodChannel('native_textfield_tv');
-  
+
   // 存储所有活跃的控制器实例，用于处理回调
   static final Map<int, NativeTextFieldController> _instances = {};
   static int _nextInstanceId = 0;
-  
+
   final int _instanceId;
   ValueChanged<bool>? onFocusChanged;
   bool _isUpdatingFromNative = false;
@@ -38,9 +31,9 @@ class NativeTextFieldController extends TextEditingController {
   static Future<dynamic> _handleMethodCall(MethodCall call) async {
     final instanceId = call.arguments['instanceId'] as int?;
     final controller = _instances[instanceId];
-    
+
     if (controller == null) return;
-    
+
     switch (call.method) {
       case 'onTextChanged':
         final text = call.arguments['text'] as String? ?? '';
@@ -78,7 +71,6 @@ class NativeTextFieldController extends TextEditingController {
   }
 
   Future<void> setText(String text) async {
-    // 直接设置文本，notifyListeners 会自动同步到原生端
     this.text = text;
   }
 
@@ -181,7 +173,7 @@ class _NativeTextFieldState extends State<NativeTextField> {
       _controller = NativeTextFieldController();
       _isControllerCreated = true;
     }
-    
+
     // 设置回调
     if (widget.onChanged != null) {
       _controller.addListener(() {
@@ -189,8 +181,7 @@ class _NativeTextFieldState extends State<NativeTextField> {
       });
     }
     _controller.onFocusChanged = widget.onFocusChanged;
-    
-    // 初始化 channel（只在第一次时）
+
     NativeTextFieldController._initializeChannel();
   }
 
@@ -205,7 +196,7 @@ class _NativeTextFieldState extends State<NativeTextField> {
         _controller = NativeTextFieldController();
         _isControllerCreated = true;
       }
-      
+
       // 重新设置回调
       if (widget.onChanged != null) {
         _controller.addListener(() {
@@ -239,14 +230,10 @@ class _NativeTextFieldState extends State<NativeTextField> {
       );
     }
 
-    // 否则直接返回 AndroidView，让它根据父级约束自适应
     return child;
   }
 
-  void _onPlatformViewCreated(int id) {
-    // PlatformView创建完成后的回调
-    // 可以在这里进行一些初始化操作
-  }
+  void _onPlatformViewCreated(int id) {}
 
   @override
   void dispose() {

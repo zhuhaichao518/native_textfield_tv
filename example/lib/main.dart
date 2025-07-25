@@ -16,14 +16,14 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   String _textContent = '';
-  
-  // Clear focus node names for better readability
+
   final FocusNode _firstTextFieldFocus = FocusNode();
   final FocusNode _secondTextFieldFocus = FocusNode();
-  
-  // Clear controller names
-  final NativeTextFieldController _firstController = NativeTextFieldController();
-  final NativeTextFieldController _secondController = NativeTextFieldController(text: 'Initial text');
+
+  final NativeTextFieldController _firstController =
+      NativeTextFieldController();
+  final NativeTextFieldController _secondController =
+      NativeTextFieldController(text: 'Initial text');
 
   @override
   void initState() {
@@ -34,7 +34,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> initPlatformState() async {
     String platformVersion;
     try {
-      platformVersion = await NativeTextfieldTv().getPlatformVersion() ?? 'Unknown platform version';
+      platformVersion = await NativeTextfieldTv().getPlatformVersion() ??
+          'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -55,6 +56,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text('Native TextField TV Demo'),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -64,7 +66,6 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Platform info card
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -82,8 +83,6 @@ class _MyAppState extends State<MyApp> {
                 ),
               ),
               const SizedBox(height: 20),
-              
-              // Main demo card
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -95,8 +94,6 @@ class _MyAppState extends State<MyApp> {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
-                      
-                      // Row 1: Control buttons
                       Row(
                         children: [
                           ElevatedButton.icon(
@@ -122,26 +119,17 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ],
                       ),
-                      
                       const SizedBox(height: 16),
-                      
-                      // Row 2: First TextField
                       DpadNativeTextField(
-                        focusNode: _firstTextFieldFocus, 
+                        focusNode: _firstTextFieldFocus,
                         controller: _firstController,
                       ),
-                      
                       const SizedBox(height: 16),
-                      
-                      // Row 3: Second TextField
                       DpadNativeTextField(
-                        focusNode: _secondTextFieldFocus, 
+                        focusNode: _secondTextFieldFocus,
                         controller: _secondController,
                       ),
-                      
                       const SizedBox(height: 16),
-                      
-                      // Row 4: Focus control button
                       ElevatedButton.icon(
                         onPressed: () {
                           _firstTextFieldFocus.requestFocus();
@@ -149,7 +137,6 @@ class _MyAppState extends State<MyApp> {
                         icon: const Icon(Icons.keyboard),
                         label: const Text('Focus to First TextField'),
                       ),
-                      
                       const SizedBox(height: 16),
                       Text('Current text content: $_textContent'),
                     ],

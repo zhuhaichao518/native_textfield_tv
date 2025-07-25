@@ -66,16 +66,20 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
           if (event.logicalKey.keyLabel == keyCenter && !_textFieldhasFocus) {
             _textFieldhasFocus = true;
             FocusScope.of(context).nextFocus();
-          } else if (event.logicalKey.keyLabel == keyDown && !_textFieldhasFocus) {
+          } else if (event.logicalKey.keyLabel == keyDown &&
+              !_textFieldhasFocus) {
             _textFieldhasFocus = false;
-          } else if (event.logicalKey.keyLabel == keyUp && !_textFieldhasFocus) {
+          } else if (event.logicalKey.keyLabel == keyUp &&
+              !_textFieldhasFocus) {
             _textFieldhasFocus = false;
-          } else if (event.logicalKey.keyLabel == keyCenter && _textFieldhasFocus){
+          } else if (event.logicalKey.keyLabel == keyCenter &&
+              _textFieldhasFocus) {
             SystemChannels.textInput.invokeMethod('TextInput.show');
-          } else if (event.logicalKey.keyLabel == keyUp && _textFieldhasFocus){
+          } else if (event.logicalKey.keyLabel == keyUp && _textFieldhasFocus) {
             _textFieldhasFocus = false;
             widget.focusNode.requestFocus();
-          } else if (event.logicalKey.keyLabel == keyDown && _textFieldhasFocus){
+          } else if (event.logicalKey.keyLabel == keyDown &&
+              _textFieldhasFocus) {
             _textFieldhasFocus = false;
             widget.focusNode.requestFocus();
           }

@@ -100,42 +100,41 @@ void main() {
 
   test('NativeTextFieldController inheritance from TextEditingController', () {
     final controller = NativeTextFieldController(text: 'initial text');
-    
-    // 测试继承的 TextEditingController 功能
+
     expect(controller.text, 'initial text');
     expect(controller.text.isEmpty, false);
-    
+
     // 测试可以设置文本
     controller.text = 'new text';
     expect(controller.text, 'new text');
-    
+
     // 测试监听器功能
     String? lastText;
     controller.addListener(() {
       lastText = controller.text;
     });
-    
+
     controller.text = 'listener test';
     expect(lastText, 'listener test');
-    
+
     controller.dispose();
   });
 
   test('NativeTextFieldController with onFocusChanged callback', () {
     final controller = NativeTextFieldController();
     bool? focusState;
-    
+
     controller.onFocusChanged = (hasFocus) {
       focusState = hasFocus;
     };
-    
+
     // 模拟焦点变化回调
     controller.onFocusChanged?.call(true);
     expect(focusState, true);
-    
+
     controller.onFocusChanged?.call(false);
     expect(focusState, false);
-    
+
     controller.dispose();
   });
 }
