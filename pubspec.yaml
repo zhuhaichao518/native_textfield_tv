@@ -1,11 +1,30 @@
 name: native_textfield_tv
-description: "A new Flutter plugin project."
-version: 0.0.1
-homepage:
+description: "A Flutter plugin that provides native TextField component using PlatformView on Android platform. Features include focus management, real-time text content access, and TextEditingController compatibility."
+version: 0.0.2
+homepage: https://github.com/yourusername/native_textfield_tv
+repository: https://github.com/yourusername/native_textfield_tv
+issue_tracker: https://github.com/yourusername/native_textfield_tv/issues
+documentation: https://github.com/yourusername/native_textfield_tv/blob/main/README.md
 
 environment:
-  sdk: ^3.6.0-332.0.dev
+  sdk: '>=3.0.0 <4.0.0'
   flutter: '>=3.3.0'
+
+# 添加发布信息
+publish_to: 'https://pub.dev'
+
+# 添加标签
+topics:
+  - textfield
+  - android
+  - platformview
+  - native
+  - input
+  - form
+  - tv
+  - remote-control
+
+
 
 dependencies:
   flutter:
