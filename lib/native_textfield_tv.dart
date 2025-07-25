@@ -266,6 +266,7 @@ class DpadNativeTextField extends StatefulWidget {
   final NativeTextFieldController controller;
   final double height;
   final bool obscureText;
+  final String? hint;
 
   const DpadNativeTextField({
     super.key,
@@ -273,6 +274,7 @@ class DpadNativeTextField extends StatefulWidget {
     required this.controller,
     this.height = 48,
     this.obscureText = false,
+    this.hint,
   });
 
   @override
@@ -328,6 +330,7 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
         width: double.infinity,
         height: widget.height,
         obscureText: widget.obscureText,
+        hint: widget.hint,
       ),
     );
   }
