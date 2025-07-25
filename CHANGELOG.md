@@ -2,6 +2,11 @@
 
 ## [0.0.2] - 2024-01-XX
 
+### 🚨 Critical Update - Android TV Remote Control Solution
+- **Solves Flutter TextField TV Remote Issue**: This plugin addresses the critical problem described in [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924) where Flutter's default TextField doesn't work with TV remotes on Android TV devices
+- **Native Android EditText**: Uses Android's native EditText component through PlatformView to ensure full TV remote compatibility
+- **Perfect for Android TV Apps**: Specifically designed for apps that need text input on Android TV, Chromecast, Fire TV, and other TV devices
+
 ### 重要更新
 - **NativeTextFieldController 现在继承自 TextEditingController**
   - 提供完整的 TextEditingController 兼容性

@@ -1,5 +1,5 @@
 name: native_textfield_tv
-description: "A Flutter plugin that provides native TextField component using PlatformView on Android platform. Features include focus management, real-time text content access, and TextEditingController compatibility."
+description: "A Flutter plugin that provides native Android EditText component as a solution for Android TV remote control issues with Flutter's default TextField. According to Flutter issue #154924, the default TextField doesn't work properly with TV remotes on many Android TV devices. This plugin offers a native alternative with full TextEditingController compatibility, focus management, and real-time text access."
 version: 0.0.2
 homepage: https://github.com/zhuhaichao518/native_textfield_tv
 repository: https://github.com/zhuhaichao518/native_textfield_tv
@@ -23,8 +23,6 @@ topics:
   - form
   - tv
   - remote-control
-
-
 
 dependencies:
   flutter:

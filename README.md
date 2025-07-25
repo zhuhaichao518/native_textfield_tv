@@ -1,41 +1,53 @@
 # Native TextField TV
 
-一个Flutter插件，使用PlatformView在Android平台上实现原生TextField组件。
+A Flutter plugin that provides native Android EditText component as a solution for Android TV remote control issues with Flutter's default TextField.
 
-## 功能特性
+## 🚨 Problem Statement
 
-- 使用Android原生EditText组件
-- 支持FocusNode焦点管理
-- 实时文本内容获取
-- 支持提示文本和初始文本
-- 支持启用/禁用状态
-- 支持焦点变化监听
-- 支持文本变化监听
-- **NativeTextFieldController 继承自 TextEditingController，提供完整的文本编辑功能**
+According to [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924), Flutter's default `TextField` doesn't work properly with TV remotes on many Android TV devices (including Google Chromecast). The keyboard appears but arrow key navigation through letters doesn't work because the Flutter app keeps focus.
 
-## 安装
+**This plugin provides a native Android solution** that bypasses this limitation by using Android's native `EditText` component through PlatformView.
 
-在你的`pubspec.yaml`文件中添加依赖：
+## ✨ Features
+
+- **Android TV Remote Compatible**: Works perfectly with TV remote controls
+- **Native Android EditText**: Uses Android's native text input component
+- **Full TextEditingController Compatibility**: Inherits from TextEditingController for seamless integration
+- **Focus Management**: Complete focus control with FocusNode support
+- **Real-time Text Access**: Get and set text content in real-time
+- **Customizable**: Support for hints, initial text, and styling
+- **Platform Support**: Currently supports Android (TV and mobile)
+
+## 🎯 Use Cases
+
+- **Android TV Apps**: Perfect for apps that need text input on Android TV
+- **Chromecast Apps**: Solves the remote control input issue on Chromecast devices
+- **TV Remote Navigation**: Full compatibility with TV remote arrow keys and selection
+- **Legacy Flutter Apps**: Drop-in replacement for problematic TextField instances
+
+## 📦 Installation
+
+Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  native_textfield_tv: ^0.0.1
+  native_textfield_tv: ^0.0.2
 ```
 
-## 使用方法
+## 🚀 Usage
 
-### 基本用法
+### Basic Usage (Perfect for Android TV)
 
 ```dart
 import 'package:flutter/material.dart';
 import 'package:native_textfield_tv/native_textfield_tv.dart';
 
-class MyWidget extends StatefulWidget {
+class MyTVWidget extends StatefulWidget {
   @override
-  _MyWidgetState createState() => _MyWidgetState();
+  _MyTVWidgetState createState() => _MyTVWidgetState();
 }
 
-class _MyWidgetState extends State<MyWidget> {
+class _MyTVWidgetState extends State<MyTVWidget> {
   final FocusNode _focusNode = FocusNode();
   String _textContent = '';
 
@@ -43,9 +55,10 @@ class _MyWidgetState extends State<MyWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // This works perfectly with TV remote controls!
         NativeTextField(
-          hint: '请输入文本...',
-          initialText: '初始文本',
+          hint: 'Enter text using your TV remote...',
+          initialText: 'Initial text',
           focusNode: _focusNode,
           onChanged: (text) {
             setState(() {
@@ -53,15 +66,15 @@ class _MyWidgetState extends State<MyWidget> {
             });
           },
           onFocusChanged: (hasFocus) {
-            print('焦点变化: $hasFocus');
+            print('Focus changed: $hasFocus');
           },
           width: double.infinity,
           height: 50,
         ),
-        Text('当前文本: $_textContent'),
+        Text('Current text: $_textContent'),
         ElevatedButton(
           onPressed: () => _focusNode.requestFocus(),
-          child: Text('请求焦点'),
+          child: Text('Request Focus'),
         ),
       ],
     );
@@ -75,17 +88,17 @@ class _MyWidgetState extends State<MyWidget> {
 }
 ```
 
-### 使用控制器（TextEditingController 兼容）
+### Using Controller (TextEditingController Compatible)
 
 ```dart
-class MyWidget extends StatefulWidget {
+class MyTVWidget extends StatefulWidget {
   @override
-  _MyWidgetState createState() => _MyWidgetState();
+  _MyTVWidgetState createState() => _MyTVWidgetState();
 }
 
-class _MyWidgetState extends State<MyWidget> {
-  // 创建控制器，支持初始文本
-  final NativeTextFieldController _controller = NativeTextFieldController(text: '初始文本');
+class _MyTVWidgetState extends State<MyTVWidget> {
+  // Create controller with initial text
+  final NativeTextFieldController _controller = NativeTextFieldController(text: 'Initial text');
 
   @override
   Widget build(BuildContext context) {
@@ -93,41 +106,41 @@ class _MyWidgetState extends State<MyWidget> {
       children: [
         NativeTextField(
           controller: _controller,
-          hint: '请输入文本...',
+          hint: 'Enter text with TV remote...',
           onChanged: (text) {
-            // 文本变化回调
+            // Text change callback
           },
         ),
         Row(
           children: [
             ElevatedButton(
               onPressed: () async {
-                // 获取文本内容
+                // Get text content
                 final text = await _controller.getText();
-                print('当前文本: $text');
+                print('Current text: $text');
               },
-              child: Text('获取文本'),
+              child: Text('Get Text'),
             ),
             ElevatedButton(
               onPressed: () {
-                // 设置文本内容 - 使用 setText 方法
-                _controller.setText('新文本');
+                // Set text content using setText method
+                _controller.setText('New text');
               },
-              child: Text('设置文本'),
+              child: Text('Set Text'),
             ),
             ElevatedButton(
               onPressed: () {
-                // 使用 TextEditingController 的 text 属性
-                _controller.text = '通过 text 属性设置';
+                // Use TextEditingController's text property
+                _controller.text = 'Set via text property';
               },
-              child: Text('text 属性'),
+              child: Text('Text Property'),
             ),
             ElevatedButton(
               onPressed: () {
-                // 使用 TextEditingController 的 clear 方法
+                // Use TextEditingController's clear method
                 _controller.clear();
               },
-              child: Text('清空文本'),
+              child: Text('Clear Text'),
             ),
           ],
         ),
@@ -143,26 +156,26 @@ class _MyWidgetState extends State<MyWidget> {
 }
 ```
 
-### 监听器模式
+### Listener Pattern
 
 ```dart
-class MyWidget extends StatefulWidget {
+class MyTVWidget extends StatefulWidget {
   @override
-  _MyWidgetState createState() => _MyWidgetState();
+  _MyTVWidgetState createState() => _MyTVWidgetState();
 }
 
-class _MyWidgetState extends State<MyWidget> {
+class _MyTVWidgetState extends State<MyTVWidget> {
   final NativeTextFieldController _controller = NativeTextFieldController();
 
   @override
   void initState() {
     super.initState();
     
-    // 添加监听器
+    // Add listener for text changes
     _controller.addListener(() {
-      print('文本变化: ${_controller.text}');
+      print('Text changed: ${_controller.text}');
       setState(() {
-        // 更新UI
+        // Update UI
       });
     });
   }
@@ -171,7 +184,7 @@ class _MyWidgetState extends State<MyWidget> {
   Widget build(BuildContext context) {
     return NativeTextField(
       controller: _controller,
-      hint: '请输入文本...',
+      hint: 'Enter text with TV remote...',
     );
   }
 
@@ -183,71 +196,143 @@ class _MyWidgetState extends State<MyWidget> {
 }
 ```
 
-## API 参考
+## 📚 API Reference
 
 ### NativeTextField
 
-| 参数 | 类型 | 描述 |
-|------|------|------|
-| `hint` | `String?` | 提示文本 |
-| `initialText` | `String?` | 初始文本 |
-| `focusNode` | `FocusNode?` | 焦点节点 |
-| `onChanged` | `ValueChanged<String>?` | 文本变化回调 |
-| `onFocusChanged` | `ValueChanged<bool>?` | 焦点变化回调 |
-| `enabled` | `bool` | 是否启用，默认为true |
-| `width` | `double?` | 宽度 |
-| `height` | `double?` | 高度 |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `hint` | `String?` | Hint text |
+| `initialText` | `String?` | Initial text |
+| `focusNode` | `FocusNode?` | Focus node for TV remote navigation |
+| `onChanged` | `ValueChanged<String>?` | Text change callback |
+| `onFocusChanged` | `ValueChanged<bool>?` | Focus change callback |
+| `enabled` | `bool` | Whether the field is enabled, defaults to true |
+| `width` | `double?` | Width of the field |
+| `height` | `double?` | Height of the field |
 
 ### NativeTextFieldController
 
-**继承自 TextEditingController，提供所有 TextEditingController 功能：**
+**Inherits from TextEditingController, providing all TextEditingController functionality:**
 
-| 属性/方法 | 类型 | 描述 |
-|-----------|------|------|
-| `text` | `String` | 文本内容（继承自 TextEditingController） |
-| `selection` | `TextSelection` | 文本选择（继承自 TextEditingController） |
-| `addListener(VoidCallback listener)` | `void` | 添加监听器（继承自 TextEditingController） |
-| `removeListener(VoidCallback listener)` | `void` | 移除监听器（继承自 TextEditingController） |
-| `clear()` | `void` | 清空文本（继承自 TextEditingController） |
-| `setText(String text)` | `Future<void>` | 设置文本内容 |
-| `getText()` | `Future<String>` | 获取文本内容 |
-| `requestFocus()` | `Future<void>` | 请求焦点 |
-| `clearFocus()` | `Future<void>` | 清除焦点 |
-| `setEnabled(bool enabled)` | `Future<void>` | 设置启用状态 |
-| `setHint(String hint)` | `Future<void>` | 设置提示文本 |
-| `onFocusChanged` | `ValueChanged<bool>?` | 焦点变化回调 |
+| Property/Method | Type | Description |
+|-----------------|------|-------------|
+| `text` | `String` | Text content (inherited from TextEditingController) |
+| `selection` | `TextSelection` | Text selection (inherited from TextEditingController) |
+| `addListener(VoidCallback listener)` | `void` | Add listener (inherited from TextEditingController) |
+| `removeListener(VoidCallback listener)` | `void` | Remove listener (inherited from TextEditingController) |
+| `clear()` | `void` | Clear text (inherited from TextEditingController) |
+| `setText(String text)` | `Future<void>` | Set text content |
+| `getText()` | `Future<String>` | Get text content |
+| `requestFocus()` | `Future<void>` | Request focus |
+| `clearFocus()` | `Future<void>` | Clear focus |
+| `setEnabled(bool enabled)` | `Future<void>` | Set enabled state |
+| `setHint(String hint)` | `Future<void>` | Set hint text |
+| `onFocusChanged` | `ValueChanged<bool>?` | Focus change callback |
 
-## 平台支持
+## 🌐 Platform Support
 
-- ✅ Android (使用PlatformView)
-- ❌ iOS (暂未实现)
-- ❌ Web (暂未实现)
+- ✅ **Android** (TV and Mobile) - Uses PlatformView with native EditText
+- ❌ iOS (Not implemented yet)
+- ❌ Web (Not implemented yet)
 
-## 开发说明
+## 🔧 Development Notes
 
-这个插件使用Flutter的PlatformView机制，在Android平台上创建原生的EditText组件。通过MethodChannel实现Flutter和原生代码之间的通信。
+This plugin uses Flutter's PlatformView mechanism to create native EditText components on Android. Communication between Flutter and native code is achieved through MethodChannel.
 
-**重要更新：** NativeTextFieldController 现在继承自 TextEditingController，这意味着：
+**Key Update:** NativeTextFieldController now inherits from TextEditingController, which means:
 
-1. **完全兼容**：可以在任何需要 TextEditingController 的地方使用
-2. **同步操作**：支持同步的文本操作（如 `controller.text = 'new text'`）
-3. **监听器支持**：支持 `addListener` 和 `removeListener`
-4. **自动同步**：文本变化会自动同步到原生端
-5. **双向绑定**：原生端的文本变化也会同步到 Flutter 端
+1. **Full Compatibility**: Can be used anywhere a TextEditingController is expected
+2. **Synchronous Operations**: Supports synchronous text operations (e.g., `controller.text = 'new text'`)
+3. **Listener Support**: Supports `addListener` and `removeListener`
+4. **Auto-Sync**: Text changes automatically sync to native side
+5. **Bidirectional Binding**: Native text changes also sync to Flutter side
 
-### 项目结构
+### Why This Solution?
+
+The [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924) describes a problem where Flutter's default TextField doesn't work properly with TV remotes on Android TV devices. The keyboard appears but arrow key navigation through letters doesn't work because the Flutter app keeps focus.
+
+This plugin provides a native Android solution that bypasses this limitation by using Android's native `EditText` component, which handles TV remote input correctly.
+
+### Project Structure
 
 ```
 lib/
-├── native_textfield_tv.dart              # 主要API
+├── native_textfield_tv.dart              # Main API
 ├── native_textfield_tv_platform_interface.dart  # 平台接口
 └── native_textfield_tv_method_channel.dart      # 方法通道实现
 
 android/src/main/kotlin/com/example/native_textfield_tv/
-├── NativeTextfieldTvPlugin.kt            # 插件主类
-└── NativeTextfieldTvView.kt              # PlatformView实现
+├── NativeTextfieldTvPlugin.kt            # Plugin main class
+└── NativeTextfieldTvView.kt              # PlatformView implementation
 ```
 
-## 许可证
+## 🎮 TV Remote Control Usage
+
+This plugin is specifically designed to work with Android TV remote controls. Here's how to use it effectively:
+
+### Basic TV Remote Setup
+
+```dart
+class TVApp extends StatefulWidget {
+  @override
+  _TVAppState createState() => _TVAppState();
+}
+
+class _TVAppState extends State<TVApp> {
+  final FocusNode _focusNode = FocusNode();
+  final NativeTextFieldController _controller = NativeTextFieldController();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Column(
+            children: [
+              // This TextField works perfectly with TV remote!
+              NativeTextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                hint: 'Use your TV remote to navigate and type',
+                width: 400,
+                height: 60,
+                onChanged: (text) {
+                  print('Text entered: $text');
+                },
+                onFocusChanged: (hasFocus) {
+                  if (hasFocus) {
+                    print('TextField focused - ready for remote input');
+                  }
+                },
+              ),
+              SizedBox(height: 20),
+              Text('Current text: ${_controller.text}'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### TV Remote Navigation Tips
+
+1. **Focus Navigation**: Use the remote's arrow keys to navigate between UI elements
+2. **Text Input**: When the TextField is focused, the on-screen keyboard will appear
+3. **Character Selection**: Use arrow keys to navigate through keyboard letters
+4. **Character Input**: Press the center/select button to input the selected character
+5. **Text Editing**: Use the remote's back button to delete characters
+
+### Compatibility
+
+- ✅ **Android TV** (All versions)
+- ✅ **Google Chromecast** (Solves the known input issue)
+- ✅ **Fire TV** (Amazon Fire Stick)
+- ✅ **NVIDIA Shield TV**
+- ✅ **Other Android TV devices**
+
+## 📄 License
 
 MIT License
