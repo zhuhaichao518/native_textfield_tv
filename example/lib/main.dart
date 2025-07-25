@@ -16,14 +16,14 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   String _textContent = '';
-  final FocusNode _focusNode = FocusNode();
-
-  final FocusNode _focusNode0 = FocusNode();
-  final FocusNode _focusNode1 = FocusNode();
   
-  // Create controllers - now works like TextEditingController
-  final NativeTextFieldController _controller = NativeTextFieldController(text: 'Initial text');
-  final NativeTextFieldController _controller1 = NativeTextFieldController();
+  // Clear focus node names for better readability
+  final FocusNode _firstTextFieldFocus = FocusNode();
+  final FocusNode _secondTextFieldFocus = FocusNode();
+  
+  // Clear controller names
+  final NativeTextFieldController _firstController = NativeTextFieldController();
+  final NativeTextFieldController _secondController = NativeTextFieldController(text: 'Initial text');
 
   @override
   void initState() {
@@ -64,6 +64,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Platform info card
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -81,6 +82,8 @@ class _MyAppState extends State<MyApp> {
                 ),
               ),
               const SizedBox(height: 20),
+              
+              // Main demo card
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -93,14 +96,14 @@ class _MyAppState extends State<MyApp> {
                       ),
                       const SizedBox(height: 16),
                       
-                      // First row: Set text and Clear text buttons
+                      // Row 1: Control buttons
                       Row(
                         children: [
                           ElevatedButton.icon(
                             onPressed: () {
-                              _controller.setText('New text from button');
+                              _secondController.setText('New text from button');
                               setState(() {
-                                _textContent = _controller.text;
+                                _textContent = _secondController.text;
                               });
                             },
                             icon: const Icon(Icons.edit),
@@ -109,9 +112,9 @@ class _MyAppState extends State<MyApp> {
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
                             onPressed: () {
-                              _controller.clear();
+                              _secondController.clear();
                               setState(() {
-                                _textContent = _controller.text;
+                                _textContent = _secondController.text;
                               });
                             },
                             icon: const Icon(Icons.clear),
@@ -122,26 +125,26 @@ class _MyAppState extends State<MyApp> {
                       
                       const SizedBox(height: 16),
                       
-                      // Second row: First DpadNativeTextField
+                      // Row 2: First TextField
                       DpadNativeTextField(
-                        focusNode: _focusNode1, 
-                        controller: _controller1,
+                        focusNode: _firstTextFieldFocus, 
+                        controller: _firstController,
                       ),
                       
                       const SizedBox(height: 16),
                       
-                      // Third row: Second DpadNativeTextField
+                      // Row 3: Second TextField
                       DpadNativeTextField(
-                        focusNode: _focusNode0, 
-                        controller: _controller,
+                        focusNode: _secondTextFieldFocus, 
+                        controller: _secondController,
                       ),
                       
                       const SizedBox(height: 16),
                       
-                      // Fourth row: Focus button
+                      // Row 4: Focus control button
                       ElevatedButton.icon(
                         onPressed: () {
-                          _focusNode1.requestFocus();
+                          _firstTextFieldFocus.requestFocus();
                         },
                         icon: const Icon(Icons.keyboard),
                         label: const Text('Focus to First TextField'),
@@ -162,10 +165,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    _focusNode.dispose();
-    _focusNode0.dispose();
-    _focusNode1.dispose();
-    _controller.dispose();
+    _firstTextFieldFocus.dispose();
+    _secondTextFieldFocus.dispose();
+    _firstController.dispose();
+    _secondController.dispose();
     super.dispose();
   }
 }
