@@ -4,9 +4,12 @@ A Flutter plugin that provides native Android EditText component as a solution f
 
 ## 🚨 Problem Statement
 
-According to [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924), Flutter's default `TextField` doesn't work properly with TV remotes on many Android TV devices (including Google Chromecast). The keyboard appears but arrow key navigation through letters doesn't work because the Flutter app keeps focus.
+According to [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924) and [Flutter issue #147772](https://github.com/flutter/flutter/issues/147772), Flutter's default `TextField` has multiple issues with TV remotes on Android TV devices:
 
-**This plugin provides a native Android solution** that bypasses this limitation by using Android's native `EditText` component through PlatformView.
+- **Issue #154924**: The keyboard appears but arrow key navigation through letters doesn't work because the Flutter app keeps focus
+- **Issue #147772**: D-pad navigation is broken after closing the keyboard, preventing focus changes between TextFields
+
+**This plugin provides a native Android solution** that bypasses these limitations by using Android's native `EditText` component through PlatformView.
 
 ## ✨ Features
 
