@@ -79,11 +79,15 @@ class NativeTextFieldController extends TextEditingController {
 
   void _syncToAllNativeInstances() {
     for (final instanceId in _managedInstanceIds) {
-      _channel.invokeMethod('setText', {
-        'instanceId': instanceId,
-        'text': text,
-      });
+      _syncToNativeInstance(instanceId);
     }
+  }
+
+  void _syncToNativeInstance(int instanceId) {
+    _channel.invokeMethod('setText', {
+      'instanceId': instanceId,
+      'text': text,
+    });
   }
 
   Future<void> setText(String text) async {
@@ -288,7 +292,14 @@ class _NativeTextFieldState extends State<NativeTextField> {
     return child;
   }
 
-  void _onPlatformViewCreated(int id) {}
+  void _onPlatformViewCreated(int id) {
+    // AndroidView 创建完成后，同步 controller 的当前文本到原生端
+    // 如果 controller 有文本内容且与 initialText 不同，则同步到原生端
+    if (_controller.text.isNotEmpty && 
+        _controller.text != widget.initialText) {
+      _controller._syncToNativeInstance(_instanceId);
+    }
+  }
 
   @override
   void dispose() {

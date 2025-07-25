@@ -21,11 +21,11 @@ class _MyAppState extends State<MyApp> {
   final FocusNode _secondTextFieldFocus = FocusNode();
   final FocusNode _thirdTextFieldFocus = FocusNode();
 
-  // 使用同一个 controller 管理多个文本框
-  final NativeTextFieldController _sharedController = NativeTextFieldController();
+  // 使用同一个 controller 管理多个文本框，并设置初始文本
+  final NativeTextFieldController _sharedController = NativeTextFieldController(text: '共享初始文本');
   
   // 独立的 controller
-  final NativeTextFieldController _independentController = NativeTextFieldController();
+  final NativeTextFieldController _independentController = NativeTextFieldController(text: '独立初始文本');
 
   @override
   void initState() {
@@ -118,6 +118,17 @@ class _MyAppState extends State<MyApp> {
                             },
                             icon: const Icon(Icons.clear),
                             label: const Text('清空共享文本'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _sharedController.setText('测试同步');
+                              setState(() {
+                                _textContent = _sharedController.text;
+                              });
+                            },
+                            icon: const Icon(Icons.sync),
+                            label: const Text('测试同步'),
                           ),
                         ],
                       ),
