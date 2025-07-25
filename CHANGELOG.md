@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.0.2] - 2024-01-XX
+## [0.0.3] - 2025-07-26
+
+### 版本更新
+- 每个instance绑定到nativetextfiled而不是controller
+
+## [0.0.2] - 2025-07-26
 
 ### 🚨 Critical Update - Android TV Remote Control Solution
 - **Solves Flutter TextField TV Remote Issues**: This plugin addresses the critical problems described in [Flutter issue #154924](https://github.com/flutter/flutter/issues/154924) and [Flutter issue #147772](https://github.com/flutter/flutter/issues/147772) where Flutter's default TextField has multiple issues with TV remotes on Android TV devices
