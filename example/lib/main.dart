@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Native TextField TV Demo'),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
-        body: Padding(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
