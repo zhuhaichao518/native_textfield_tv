@@ -39,161 +39,174 @@ dependencies:
 
 ## 🚀 Usage
 
-### Basic Usage (Perfect for Android TV)
-
 ```dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:native_textfield_tv/native_textfield_tv.dart';
 
-class MyTVWidget extends StatefulWidget {
-  @override
-  _MyTVWidgetState createState() => _MyTVWidgetState();
+void main() {
+  runApp(const MyApp());
 }
 
-class _MyTVWidgetState extends State<MyTVWidget> {
-  final FocusNode _focusNode = FocusNode();
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String _platformVersion = 'Unknown';
   String _textContent = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // This works perfectly with TV remote controls!
-        NativeTextField(
-          hint: 'Enter text using your TV remote...',
-          initialText: 'Initial text',
-          focusNode: _focusNode,
-          onChanged: (text) {
-            setState(() {
-              _textContent = text;
-            });
-          },
-          onFocusChanged: (hasFocus) {
-            print('Focus changed: $hasFocus');
-          },
-          width: double.infinity,
-          height: 50,
-        ),
-        Text('Current text: $_textContent'),
-        ElevatedButton(
-          onPressed: () => _focusNode.requestFocus(),
-          child: Text('Request Focus'),
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
-}
-```
-
-### Using Controller (TextEditingController Compatible)
-
-```dart
-class MyTVWidget extends StatefulWidget {
-  @override
-  _MyTVWidgetState createState() => _MyTVWidgetState();
-}
-
-class _MyTVWidgetState extends State<MyTVWidget> {
-  // Create controller with initial text
-  final NativeTextFieldController _controller = NativeTextFieldController(text: 'Initial text');
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        NativeTextField(
-          controller: _controller,
-          hint: 'Enter text with TV remote...',
-          onChanged: (text) {
-            // Text change callback
-          },
-        ),
-        Row(
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                // Get text content
-                final text = await _controller.getText();
-                print('Current text: $text');
-              },
-              child: Text('Get Text'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Set text content using setText method
-                _controller.setText('New text');
-              },
-              child: Text('Set Text'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Use TextEditingController's text property
-                _controller.text = 'Set via text property';
-              },
-              child: Text('Text Property'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Use TextEditingController's clear method
-                _controller.clear();
-              },
-              child: Text('Clear Text'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-}
-```
-
-### Listener Pattern
-
-```dart
-class MyTVWidget extends StatefulWidget {
-  @override
-  _MyTVWidgetState createState() => _MyTVWidgetState();
-}
-
-class _MyTVWidgetState extends State<MyTVWidget> {
-  final NativeTextFieldController _controller = NativeTextFieldController();
+  
+  final ScrollController _scrollController = ScrollController();
+  
+  final FocusNode _firstTextFieldFocus = FocusNode();
+  final FocusNode _secondTextFieldFocus = FocusNode();
+  
+  final NativeTextFieldController _firstController = NativeTextFieldController();
+  final NativeTextFieldController _secondController = NativeTextFieldController(text: 'Initial text');
 
   @override
   void initState() {
     super.initState();
-    
-    // Add listener for text changes
-    _controller.addListener(() {
-      print('Text changed: ${_controller.text}');
-      setState(() {
-        // Update UI
-      });
+    initPlatformState();
+  }
+
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    try {
+      platformVersion = await NativeTextfieldTv().getPlatformVersion() ?? 'Unknown platform version';
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return NativeTextField(
-      controller: _controller,
-      hint: 'Enter text with TV remote...',
+    return MaterialApp(
+      title: 'Native TextField TV Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          title: const Text('Native TextField TV Demo'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Platform Info',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Platform Version: $_platformVersion'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Native TextField Demo',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _secondController.setText('New text from button');
+                              setState(() {
+                                _textContent = _secondController.text;
+                              });
+                            },
+                            icon: const Icon(Icons.edit),
+                            label: const Text('Set Text'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _secondController.clear();
+                              setState(() {
+                                _textContent = _secondController.text;
+                              });
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Clear Text'),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      DpadNativeTextField(
+                        focusNode: _firstTextFieldFocus, 
+                        controller: _firstController,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      DpadNativeTextField(
+                        focusNode: _secondTextFieldFocus, 
+                        controller: _secondController,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          _firstTextFieldFocus.requestFocus();
+                        },
+                        icon: const Icon(Icons.keyboard),
+                        label: const Text('Focus to First TextField'),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      Text('Current text content: $_textContent'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _firstTextFieldFocus.dispose();
+    _secondTextFieldFocus.dispose();
+    _firstController.dispose();
+    _secondController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }
@@ -270,72 +283,4 @@ android/src/main/kotlin/com/example/native_textfield_tv/
 └── NativeTextfieldTvView.kt              # PlatformView implementation
 ```
 
-## 🎮 TV Remote Control Usage
 
-This plugin is specifically designed to work with Android TV remote controls. Here's how to use it effectively:
-
-### Basic TV Remote Setup
-
-```dart
-class TVApp extends StatefulWidget {
-  @override
-  _TVAppState createState() => _TVAppState();
-}
-
-class _TVAppState extends State<TVApp> {
-  final FocusNode _focusNode = FocusNode();
-  final NativeTextFieldController _controller = NativeTextFieldController();
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              // This TextField works perfectly with TV remote!
-              NativeTextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                hint: 'Use your TV remote to navigate and type',
-                width: 400,
-                height: 60,
-                onChanged: (text) {
-                  print('Text entered: $text');
-                },
-                onFocusChanged: (hasFocus) {
-                  if (hasFocus) {
-                    print('TextField focused - ready for remote input');
-                  }
-                },
-              ),
-              SizedBox(height: 20),
-              Text('Current text: ${_controller.text}'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-```
-
-### TV Remote Navigation Tips
-
-1. **Focus Navigation**: Use the remote's arrow keys to navigate between UI elements
-2. **Text Input**: When the TextField is focused, the on-screen keyboard will appear
-3. **Character Selection**: Use arrow keys to navigate through keyboard letters
-4. **Character Input**: Press the center/select button to input the selected character
-5. **Text Editing**: Use the remote's back button to delete characters
-
-### Compatibility
-
-- ✅ **Android TV** (All versions)
-- ✅ **Google Chromecast** (Solves the known input issue)
-- ✅ **Fire TV** (Amazon Fire Stick)
-- ✅ **NVIDIA Shield TV**
-- ✅ **Other Android TV devices**
-
-## 📄 License
-
-MIT License
