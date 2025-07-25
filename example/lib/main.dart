@@ -21,8 +21,8 @@ class _MyAppState extends State<MyApp> {
   final FocusNode _focusNode0 = FocusNode();
   final FocusNode _focusNode1 = FocusNode();
   
-  // 创建控制器
-  final NativeTextFieldController _controller = NativeTextFieldController();
+  // 创建控制器 - 现在可以像 TextEditingController 一样使用
+  final NativeTextFieldController _controller = NativeTextFieldController(text: '初始文本');
   final NativeTextFieldController _controller1 = NativeTextFieldController();
 
   @override
@@ -150,6 +150,52 @@ class _MyAppState extends State<MyApp> {
                             },
                             icon: const Icon(Icons.edit),
                             label: const Text('设置文本'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text('TextEditingController 功能演示:'),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // 使用 TextEditingController 的 text 属性
+                              _controller.text = '通过 text 属性设置';
+                              setState(() {
+                                _textContent = _controller.text;
+                              });
+                            },
+                            icon: const Icon(Icons.text_fields),
+                            label: const Text('text 属性'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // 使用 TextEditingController 的 selection 属性
+                              _controller.text = '测试选择文本';
+                              _controller.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: 4,
+                              );
+                              setState(() {
+                                _textContent = _controller.text;
+                              });
+                            },
+                            icon: const Icon(Icons.select_all),
+                            label: const Text('选择文本'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // 使用 TextEditingController 的 clear 方法
+                              _controller.clear();
+                              setState(() {
+                                _textContent = _controller.text;
+                              });
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('清空文本'),
                           ),
                         ],
                       ),

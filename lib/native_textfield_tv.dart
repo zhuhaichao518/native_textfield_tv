@@ -17,7 +17,7 @@ class NativeTextfieldTv {
   }
 }
 
-class NativeTextFieldController {
+class NativeTextFieldController extends TextEditingController {
   static const MethodChannel _channel = MethodChannel('native_textfield_tv');
   
   // 存储所有活跃的控制器实例，用于处理回调
@@ -25,11 +25,14 @@ class NativeTextFieldController {
   static int _nextInstanceId = 0;
   
   final int _instanceId;
-  ValueChanged<String>? onChanged;
   ValueChanged<bool>? onFocusChanged;
+  bool _isUpdatingFromNative = false;
 
-  NativeTextFieldController() : _instanceId = _nextInstanceId++ {
+  NativeTextFieldController({String? text}) : _instanceId = _nextInstanceId++ {
     _instances[_instanceId] = this;
+    if (text != null) {
+      super.text = text;
+    }
   }
 
   static Future<dynamic> _handleMethodCall(MethodCall call) async {
@@ -41,7 +44,11 @@ class NativeTextFieldController {
     switch (call.method) {
       case 'onTextChanged':
         final text = call.arguments['text'] as String? ?? '';
-        controller.onChanged?.call(text);
+        controller._isUpdatingFromNative = true;
+        if (controller.text != text) {
+          controller.text = text;
+        }
+        controller._isUpdatingFromNative = false;
         break;
       case 'onFocusChanged':
         final hasFocus = call.arguments['hasFocus'] as bool? ?? false;
@@ -54,11 +61,25 @@ class NativeTextFieldController {
     _channel.setMethodCallHandler(_handleMethodCall);
   }
 
-  Future<void> setText(String text) async {
-    await _channel.invokeMethod('setText', {
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    // 只有当不是从原生端更新时才同步到原生端
+    if (!_isUpdatingFromNative) {
+      _syncToNative();
+    }
+  }
+
+  void _syncToNative() {
+    _channel.invokeMethod('setText', {
       'instanceId': _instanceId,
       'text': text,
     });
+  }
+
+  Future<void> setText(String text) async {
+    // 直接设置文本，notifyListeners 会自动同步到原生端
+    this.text = text;
   }
 
   Future<String> getText() async {
@@ -108,11 +129,13 @@ class NativeTextFieldController {
     });
   }
 
+  @override
   void dispose() {
     _instances.remove(_instanceId);
     if (_instances.isEmpty) {
       _channel.setMethodCallHandler(null);
     }
+    super.dispose();
   }
 }
 
@@ -160,7 +183,11 @@ class _NativeTextFieldState extends State<NativeTextField> {
     }
     
     // 设置回调
-    _controller.onChanged = widget.onChanged;
+    if (widget.onChanged != null) {
+      _controller.addListener(() {
+        widget.onChanged!(_controller.text);
+      });
+    }
     _controller.onFocusChanged = widget.onFocusChanged;
     
     // 初始化 channel（只在第一次时）
@@ -179,7 +206,12 @@ class _NativeTextFieldState extends State<NativeTextField> {
         _isControllerCreated = true;
       }
       
-      _controller.onChanged = widget.onChanged;
+      // 重新设置回调
+      if (widget.onChanged != null) {
+        _controller.addListener(() {
+          widget.onChanged!(_controller.text);
+        });
+      }
       _controller.onFocusChanged = widget.onFocusChanged;
     }
   }
@@ -247,8 +279,6 @@ class DpadNativeTextField extends StatefulWidget {
 }
 
 class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
-  bool _textFieldHasFocus = false;
-
   @override
   void initState() {
     super.initState();
