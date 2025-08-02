@@ -52,6 +52,7 @@ class NativeTextField extends StatefulWidget {
   final double? width;
   final double? height;
   final bool obscureText;
+  final int? maxLines;
 
   const NativeTextField({
     super.key,
@@ -65,6 +66,7 @@ class NativeTextField extends StatefulWidget {
     this.width,
     this.height,
     this.obscureText = false,
+    this.maxLines = 1,
   });
 
   @override
@@ -209,6 +211,7 @@ class _NativeTextFieldState extends State<NativeTextField> {
       'hint': widget.hint,
       'initialText': widget.initialText,
       'obscureText': widget.obscureText,
+      'maxLines': widget.maxLines,
     };
 
     Widget child = AndroidView(
@@ -267,6 +270,8 @@ class DpadNativeTextField extends StatefulWidget {
   final double height;
   final bool obscureText;
   final String? hint;
+  final int? maxLines;
+  //final int? minLines;
 
   const DpadNativeTextField({
     super.key,
@@ -275,6 +280,8 @@ class DpadNativeTextField extends StatefulWidget {
     this.height = 48,
     this.obscureText = false,
     this.hint,
+    this.maxLines = 1,
+    //this.minLines,
   });
 
   @override
@@ -331,6 +338,7 @@ class _DpadNativeTextFieldState extends State<DpadNativeTextField> {
         height: widget.height,
         obscureText: widget.obscureText,
         hint: widget.hint,
+        maxLines: widget.maxLines,
       ),
     );
   }

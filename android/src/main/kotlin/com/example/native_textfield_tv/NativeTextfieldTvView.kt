@@ -44,6 +44,9 @@ class NativeTextfieldTvView(
             if (obscureText) {
                 inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             }
+
+            val maxLines = creationParams?.get("maxLines") as? Int ?: 1
+            setLines(maxLines)
         }
 
         // 使用统一的MethodChannel
